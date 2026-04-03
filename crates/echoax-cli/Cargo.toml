@@ -1,0 +1,12 @@
+[package]
+name = "echoax-cli"
+edition.workspace = true
+version.workspace = true
+
+[[bin]]
+name = "echoax-cli"
+path = "src/main.rs"
+
+[dependencies]
+echoax-core = { path = "../echoax-core" }
+tokio = { version = "1", features = ["full"] }

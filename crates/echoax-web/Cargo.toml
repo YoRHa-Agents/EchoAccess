@@ -1,0 +1,12 @@
+[package]
+name = "echoax-web"
+edition.workspace = true
+version.workspace = true
+
+[[bin]]
+name = "echoax-web"
+path = "src/main.rs"
+
+[dependencies]
+echoax-core = { path = "../echoax-core" }
+tokio = { version = "1", features = ["full"] }
