@@ -1,0 +1,93 @@
+name: CI checks
+
+on: [push, pull_request]
+
+jobs:
+  test-msrv:
+    name: Test MSRV on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Verify working directory is clean
+        run: git diff --exit-code
+
+  test-latest:
+    name: Test latest on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        id: toolchain
+      - run: rustup override set ${{steps.toolchain.outputs.name}}
+      - name: Remove lockfile to build with latest dependencies
+        run: rm Cargo.lock
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Verify working directory is clean (excluding lockfile)
+        run: git diff --exit-code ':!Cargo.lock'
+
+  clippy:
+    name: Clippy (MSRV)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clippy check
+        uses: actions-rs/clippy-check@v1
+        with:
+          name: Clippy (MSRV)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features --all-targets -- -D warnings
+
+  codecov:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    container:
+      image: xd009642/tarpaulin:develop-nightly
+      options: --security-opt seccomp=unconfined
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        id: toolchain
+      - run: rustup override set ${{steps.toolchain.outputs.name}}
+      - name: Generate coverage report
+        run: >
+          cargo tarpaulin
+          --engine llvm
+          --release
+          --timeout 180
+          --out xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4.5.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  doc-links:
+    name: Intra-doc links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      - run: cargo fetch
+      # Requires #![deny(intra_doc_link_resolution_failure)] in crates.
+      - name: Check intra-doc links
+        run: cargo doc --document-private-items
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: cargo fmt -- --check
