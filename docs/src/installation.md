@@ -13,7 +13,7 @@ Download the latest release for your platform:
 
 ```bash
 # Example: Linux x86_64
-curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.2-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -fsSL https://github.com/YoRHa-Agents/EchoAccess/releases/latest/download/echoax-v0.1.2-x86_64-unknown-linux-gnu.tar.gz | tar xz
 sudo mv echoax-*/echo_access /usr/local/bin/echo_access
 ```
 
@@ -22,7 +22,7 @@ sudo mv echoax-*/echo_access /usr/local/bin/echo_access
 Requirements: Rust 1.94+ with cargo.
 
 ```bash
-git clone https://github.com/shendeguize/EchoAccess.git
+git clone https://github.com/YoRHa-Agents/EchoAccess.git
 cd EchoAccess
 cargo build --release -p echoax-cli
 ```
