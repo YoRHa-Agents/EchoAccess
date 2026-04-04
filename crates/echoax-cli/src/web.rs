@@ -104,10 +104,7 @@ mod tests {
     #[tokio::test]
     async fn dashboard_returns_ok() {
         let app = create_router();
-        let req = Request::builder()
-            .uri("/")
-            .body(Body::empty())
-            .unwrap();
+        let req = Request::builder().uri("/").body(Body::empty()).unwrap();
         let resp = app.oneshot(req).await.unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
     }
