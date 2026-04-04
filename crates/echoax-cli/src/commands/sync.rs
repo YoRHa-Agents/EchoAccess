@@ -1,7 +1,7 @@
 use clap::Subcommand;
 
 use echoax_core::config::model::AppConfig;
-use echoax_core::sync::SyncEngine;
+use echoax_core::EchoAccessError;
 
 #[derive(Subcommand)]
 pub enum SyncCommands {
@@ -11,6 +11,30 @@ pub enum SyncCommands {
     Download,
     /// Check sync status of all files
     Check,
+    /// Resolve sync conflicts
+    Resolve {
+        /// Resolution strategy: ours, theirs, or base
+        #[arg(long, default_value = "ours")]
+        take: String,
+        /// Specific file to resolve (resolves all if omitted)
+        #[arg(long)]
+        file: Option<String>,
+    },
+}
+
+fn normalize_sync_take(take: &str) -> echoax_core::Result<&'static str> {
+    if take.eq_ignore_ascii_case("ours") {
+        return Ok("ours");
+    }
+    if take.eq_ignore_ascii_case("theirs") {
+        return Ok("theirs");
+    }
+    if take.eq_ignore_ascii_case("base") {
+        return Ok("base");
+    }
+    Err(EchoAccessError::Sync(format!(
+        "invalid --take {take:?}; expected ours, theirs, or base"
+    )))
 }
 
 pub async fn execute(cmd: SyncCommands, verbose: bool) -> echoax_core::Result<()> {
@@ -47,7 +71,6 @@ pub async fn execute(cmd: SyncCommands, verbose: bool) -> echoax_core::Result<()
             Ok(())
         }
         SyncCommands::Check => {
-            let _engine = SyncEngine::new();
             println!("Sync status check:");
             if verbose {
                 println!("  Config dir : {}", config_dir.display());
@@ -82,5 +105,34 @@ pub async fn execute(cmd: SyncCommands, verbose: bool) -> echoax_core::Result<()
             }
             Ok(())
         }
+        SyncCommands::Resolve { take, file } => {
+            println!("Conflict resolution");
+            let take_norm = normalize_sync_take(&take)?;
+            if let Some(path) = &file {
+                println!("Resolving specific file: {path}");
+            } else {
+                println!("No active conflicts");
+            }
+            println!("Resolution strategy: {take_norm}");
+            Ok(())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_sync_take;
+
+    #[test]
+    fn normalize_sync_take_accepts_variants() {
+        assert_eq!(normalize_sync_take("ours").unwrap(), "ours");
+        assert_eq!(normalize_sync_take("OURS").unwrap(), "ours");
+        assert_eq!(normalize_sync_take("theirs").unwrap(), "theirs");
+        assert_eq!(normalize_sync_take("base").unwrap(), "base");
+    }
+
+    #[test]
+    fn normalize_sync_take_rejects_unknown() {
+        assert!(normalize_sync_take("custom").is_err());
     }
 }

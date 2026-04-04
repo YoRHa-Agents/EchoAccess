@@ -52,20 +52,29 @@ Major release bridging the gap between the core library and user-facing interfac
 - **`sync check`**: Reports engine status and profile count
 - **`sync upload/download`**: Shows cloud config status, reports SDK integration status
 
+### Directory Scanner
+
+- **Recursive directory scanning**: `scan_directory()` with configurable max depth and file limits
+- **Smart exclusions**: Automatically skips `.git`, `node_modules`, `target`, `__pycache__`, and hidden directories
+- **Scan API**: `POST /api/files/scan` discovers files in a directory for bulk tracking
+
 ### Architecture
 
 - **AppState**: Shared state struct with `Arc<RwLock<...>>` for concurrent access
-- **21 API endpoints**: Up from 4 (health, status, config, files, sync, profiles, session, groups, conflicts)
-- **Core library wiring**: AppConfig, SessionManager, SyncEngine, GroupStore, ConflictStore all connected to web layer
+- **22 API endpoints**: Up from 4 (health, status, config, files, files/scan, sync, profiles, session, groups, conflicts)
+- **Core library wiring**: AppConfig, SessionManager, SyncEngine, GroupStore, ConflictStore all connected to web and TUI layers
+- **TUI panic hook**: Terminal state properly restored on crash
 
 ### Tests
 
-- **127 tests passing** (up from 100)
+- **135 tests passing** (up from 100)
 - Added 5 group API tests (CRUD, members, batch sync)
-- Added 2 conflict API tests (list, resolve)
+- Added 3 conflict API tests (list, resolve, store)
 - Added 13 core tests (groups: 7, conflicts: 6)
+- Added 5 scanner tests (depth, max files, exclusions)
 - Added 2 TUI tests (key handling, view navigation)
-- All existing 94 core tests continue to pass
+- Added 2 CLI sync resolve tests
+- All existing tests continue to pass
 
 ---
 

@@ -696,6 +696,7 @@ name = "echoax-tui"
 version = "0.1.2"
 dependencies = [
  "crossterm",
+ "dirs",
  "echoax-core",
  "ratatui",
  "tokio",

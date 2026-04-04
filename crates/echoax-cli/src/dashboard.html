@@ -175,6 +175,37 @@
   </div>
 
   <div class="section">
+    <h2>// SYNC GROUPS</h2>
+    <div id="groups-list" class="file-list"><div class="empty-state">No groups defined.</div></div>
+    <div class="add-file-row">
+      <input type="text" id="new-group-id" placeholder="group-id" style="flex:0.4" />
+      <input type="text" id="new-group-name" placeholder="Group Name" style="flex:0.6" />
+      <input type="text" id="new-group-prefix" placeholder="path/prefix/" />
+      <button class="btn btn-outline btn-sm" onclick="createGroup()">+ GROUP</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="refreshGroups()">REFRESH GROUPS</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// CONFLICTS</h2>
+    <div id="conflicts-list" class="file-list"><div class="empty-state">No conflicts.</div></div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="refreshConflicts()">REFRESH</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// SESSION</h2>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-unlock" onclick="sessionAction('unlock')">UNLOCK</button>
+      <button class="btn btn-outline" id="btn-lock" onclick="sessionAction('lock')">LOCK</button>
+      <input type="password" id="session-password" placeholder="password..." style="flex:1;padding:.4rem .6rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none" />
+    </div>
+  </div>
+
+  <div class="section">
     <h2>// ACTIVITY LOG</h2>
     <div class="log" id="log">
       <div><span class="ts">[--:--:--]</span> <span class="ok">Server started</span></div>
@@ -369,12 +400,101 @@ function removeFile(path) {
     }).catch(function(e){ toast('Remove failed: ' + e, 'error'); });
 }
 
+function refreshGroups() {
+  fetch('/api/groups').then(function(r){return r.json()}).then(function(d){
+    var el = document.getElementById('groups-list');
+    var groups = d.groups || [];
+    if (groups.length === 0) { el.innerHTML = '<div class="empty-state">No groups defined.</div>'; return; }
+    var html = '';
+    groups.forEach(function(g) {
+      html += '<div class="file-row"><span class="file-path">' + esc(g.id) + ' — ' + esc(g.name) + '</span>';
+      html += '<div class="file-actions">';
+      html += '<span class="badge pending">' + (g.tags||[]).join(', ') + '</span>';
+      html += '<button class="btn btn-sm btn-outline" onclick="batchSync(\'' + esc(g.id) + '\')">SYNC</button>';
+      html += '<button class="btn-icon" onclick="deleteGroup(\'' + esc(g.id) + '\')" title="Delete">✕</button>';
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(e){ log('Groups refresh failed: ' + e, 'warn'); });
+}
+
+function createGroup() {
+  var id = document.getElementById('new-group-id').value.trim();
+  var name = document.getElementById('new-group-name').value.trim();
+  var prefix = document.getElementById('new-group-prefix').value.trim();
+  if (!id || !name) { toast('Group ID and name required', 'error'); return; }
+  var body = {id:id, name:name, path_prefixes: prefix ? [prefix] : []};
+  fetch('/api/groups', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); refreshGroups(); }
+      document.getElementById('new-group-id').value = '';
+      document.getElementById('new-group-name').value = '';
+      document.getElementById('new-group-prefix').value = '';
+    }).catch(function(e){ toast('Create failed: ' + e, 'error'); });
+}
+
+function deleteGroup(id) {
+  fetch('/api/groups/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})})
+    .then(function(r){return r.json()}).then(function(d){ toast(d.message, 'success'); refreshGroups(); })
+    .catch(function(e){ toast('Delete failed: ' + e, 'error'); });
+}
+
+function batchSync(groupId) {
+  fetch('/api/sync/batch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:groupId, direction:'upload'})})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log('Batch sync: ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ toast('Batch sync failed: ' + e, 'error'); });
+}
+
+function refreshConflicts() {
+  fetch('/api/conflicts').then(function(r){return r.json()}).then(function(d){
+    var el = document.getElementById('conflicts-list');
+    var conflicts = d.conflicts || [];
+    if (conflicts.length === 0) { el.innerHTML = '<div class="empty-state">No conflicts.</div>'; return; }
+    var html = '';
+    conflicts.forEach(function(c) {
+      html += '<div class="file-row"><span class="file-path">' + esc(c.path) + '</span>';
+      html += '<div class="file-actions">';
+      html += '<span class="badge ' + (c.resolved ? 'synced' : 'conflict') + '">' + (c.resolved ? 'resolved' : 'unresolved') + '</span>';
+      if (!c.resolved) {
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'ours\')">OURS</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'theirs\')">THEIRS</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'base\')">BASE</button>';
+      }
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(e){ log('Conflicts refresh failed: ' + e, 'warn'); });
+}
+
+function resolveConflict(path, strategy) {
+  fetch('/api/conflicts/resolve', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path, resolution:strategy})})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log('Resolved: ' + path + ' (' + strategy + ')', 'ok'); refreshConflicts(); refreshAll(); }
+    }).catch(function(e){ toast('Resolve failed: ' + e, 'error'); });
+}
+
+function sessionAction(action) {
+  var body = {action: action};
+  if (action === 'unlock') {
+    var pw = document.getElementById('session-password').value;
+    if (!pw) { toast('Password required', 'error'); return; }
+    body.password = pw;
+  }
+  fetch('/api/session', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast('Session ' + action + 'ed', 'success'); document.getElementById('session-password').value = ''; refreshStatus(); }
+    }).catch(function(e){ toast('Session action failed: ' + e, 'error'); });
+}
+
 fetch('/api/health').then(function(r){return r.json()}).then(function(h){
   if(h.version) document.getElementById('version').textContent = 'v'+h.version;
 }).catch(function(){});
 refreshStatus();
 refreshFiles();
 loadConfig();
+refreshGroups();
+refreshConflicts();
 document.getElementById('footer-addr').textContent = location.host;
 </script>
 </body>

@@ -48,9 +48,9 @@ pub fn render(frame: &mut Frame, app: &App) {
     frame.render_widget(tabs, chunks[1]);
 
     match app.current_view {
-        View::Dashboard => dashboard::render(frame, chunks[2]),
-        View::Sync => sync_view::render(frame, chunks[2]),
-        View::Profiles => profiles::render(frame, chunks[2]),
+        View::Dashboard => dashboard::render(frame, chunks[2], app),
+        View::Sync => sync_view::render(frame, chunks[2], app),
+        View::Profiles => profiles::render(frame, chunks[2], app),
     }
 
     let status_text = if app.status_message.is_empty() {

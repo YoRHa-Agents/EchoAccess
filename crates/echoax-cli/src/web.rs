@@ -14,8 +14,8 @@ use tokio::sync::RwLock;
 use echoax_core::config::model::AppConfig;
 use echoax_core::crypto::SessionManager;
 use echoax_core::sync::{
-    ApprovalQueue, ConflictStore, FileState, GroupStore, Resolution, SyncEngine, SyncGroup,
-    SyncStatus,
+    scan_directory, ApprovalQueue, ConflictStore, FileState, GroupStore, Resolution, SyncEngine,
+    SyncGroup, SyncStatus,
 };
 
 const DASHBOARD_HTML: &str = include_str!("dashboard.html");
@@ -121,6 +121,49 @@ async fn api_config_put(
     Ok(Json(
         json!({"status": "ok", "message": "Configuration saved"}),
     ))
+}
+
+fn default_scan_max_depth() -> usize {
+    3
+}
+
+fn default_scan_max_files() -> usize {
+    100
+}
+
+#[derive(Deserialize)]
+struct FilesScanRequest {
+    path: String,
+    #[serde(default = "default_scan_max_depth")]
+    max_depth: usize,
+    #[serde(default = "default_scan_max_files")]
+    max_files: usize,
+}
+
+async fn api_files_scan(
+    Json(req): Json<FilesScanRequest>,
+) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
+    let root = std::path::Path::new(&req.path);
+    let files = scan_directory(root, req.max_depth, req.max_files).map_err(|e| {
+        (
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(json!({"error": format!("{e}")})),
+        )
+    })?;
+
+    let file_list: Vec<Value> = files
+        .iter()
+        .map(|f| {
+            json!({
+                "path": f.path,
+                "hash": f.hash,
+                "status": format!("{:?}", f.status).to_lowercase(),
+                "last_modified": f.last_modified,
+            })
+        })
+        .collect();
+
+    Ok(Json(json!({"files": file_list})))
 }
 
 async fn api_files(State(state): State<Arc<AppState>>) -> Json<Value> {
@@ -593,6 +636,7 @@ pub fn create_router_with_state(state: Arc<AppState>) -> Router {
         .route("/api/status", get(api_status))
         .route("/api/config", get(api_config_get).put(api_config_put))
         .route("/api/files", get(api_files))
+        .route("/api/files/scan", post(api_files_scan))
         .route("/api/files/add", post(api_files_add))
         .route("/api/files/remove", post(api_files_remove))
         .route("/api/sync/upload", post(api_sync_upload))
@@ -835,6 +879,32 @@ mod tests {
             .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["files"].as_array().unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn files_scan_returns_discovered_files() {
+        let base = std::env::temp_dir().join(format!("echoax-files-scan-{}", std::process::id()));
+        std::fs::create_dir_all(&base).unwrap();
+        std::fs::write(base.join("hello.txt"), b"x").unwrap();
+
+        let payload = serde_json::json!({ "path": base.to_string_lossy() }).to_string();
+        let app = create_router_with_state(test_state());
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/files/scan")
+            .header("content-type", "application/json")
+            .body(Body::from(payload))
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        let files = json["files"].as_array().unwrap();
+        assert!(files.iter().any(|f| f["path"] == "hello.txt"));
+
+        let _ = std::fs::remove_dir_all(&base);
     }
 
     #[tokio::test]

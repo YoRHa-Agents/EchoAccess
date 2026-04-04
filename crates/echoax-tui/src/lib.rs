@@ -14,6 +14,13 @@ use ratatui::prelude::CrosstermBackend;
 use ratatui::Terminal;
 
 pub async fn run() -> echoax_core::Result<()> {
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        crossterm::terminal::disable_raw_mode().ok();
+        let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::LeaveAlternateScreen);
+        original_hook(info);
+    }));
+
     let mut app = App::new();
 
     enable_raw_mode().map_err(echoax_core::EchoAccessError::Io)?;
