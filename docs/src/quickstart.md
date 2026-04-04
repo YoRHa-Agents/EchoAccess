@@ -1,14 +1,23 @@
 # Quick Start
 
-## 1. Initialize
+## 1. Launch the Web Dashboard
 
 ```bash
-echoax-cli init
+echo_access
+```
+
+This starts the web server on port 9876 and opens your browser automatically.
+If the server is already running, it simply opens the browser to the existing instance.
+
+## 2. Initialize
+
+```bash
+echo_access init
 ```
 
 This creates the config directory at `~/.config/echoax/` with default settings.
 
-## 2. Create a Device Profile
+## 3. Create a Device Profile
 
 Create a profile at `~/.config/echoax/profiles/my-device.toml`:
 
@@ -25,22 +34,30 @@ transforms = []
 masked_fields = []
 ```
 
-## 3. Validate the Profile
+## 4. Validate the Profile
 
 ```bash
-echoax-cli profile validate ~/.config/echoax/profiles/my-device.toml
+echo_access profile validate ~/.config/echoax/profiles/my-device.toml
 ```
 
-## 4. Check Status
+## 5. Check Status
 
 ```bash
-echoax-cli status
+echo_access status
 ```
 
-## 5. Sync
+## 6. Sync
 
 ```bash
-echoax-cli sync upload    # Push local configs to cloud
-echoax-cli sync download  # Pull configs from cloud
-echoax-cli sync check     # Check for differences
+echo_access sync upload    # Push local configs to cloud
+echo_access sync download  # Pull configs from cloud
+echo_access sync check     # Check for differences
 ```
+
+## 7. TUI Mode
+
+```bash
+echo_access tui
+```
+
+Launches the NieR: Automata-styled terminal dashboard for interactive use.

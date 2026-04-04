@@ -6,6 +6,17 @@ pub mod sync;
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Start the Web UI dashboard (default when no command given)
+    Web {
+        /// Port to listen on
+        #[arg(long, default_value = "9876")]
+        port: u16,
+        /// Don't auto-open the browser
+        #[arg(long)]
+        no_open: bool,
+    },
+    /// Launch the TUI terminal dashboard
+    Tui,
     /// Initialize EchoAccess on this device
     Init,
     /// Show current sync status
@@ -23,12 +34,28 @@ pub enum Commands {
 
 pub async fn execute(cmd: Commands, verbose: bool) -> echoax_core::Result<()> {
     match cmd {
+        Commands::Web { port, no_open } => crate::web::start_server(port, no_open).await,
+        Commands::Tui => echoax_tui::run().await,
         Commands::Init => {
-            println!("Initializing EchoAccess...");
+            let config_dir = dirs::config_dir().unwrap_or_default().join("echoax");
+            std::fs::create_dir_all(config_dir.join("profiles"))
+                .map_err(echoax_core::EchoAccessError::Io)?;
+            println!("Initialized EchoAccess at {}", config_dir.display());
             Ok(())
         }
         Commands::Status => {
-            println!("EchoAccess status: ready");
+            println!("EchoAccess v{}", env!("CARGO_PKG_VERSION"));
+            println!("Session  : Locked");
+            println!("Cloud    : Disconnected");
+            if verbose {
+                println!(
+                    "Config   : {}",
+                    dirs::config_dir()
+                        .unwrap_or_default()
+                        .join("echoax")
+                        .display()
+                );
+            }
             Ok(())
         }
         Commands::Sync(sub) => sync::execute(sub, verbose).await,

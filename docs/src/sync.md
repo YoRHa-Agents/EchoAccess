@@ -28,9 +28,9 @@ When both local and cloud copies have changed, EchoAccess performs a 3-way merge
 Local modifications are not automatically uploaded. They enter an approval queue:
 
 ```bash
-echoax-cli sync check     # See pending changes
-echoax-cli sync upload    # Upload approved changes
-echoax-cli sync download  # Download from cloud
+echo_access sync check     # See pending changes
+echo_access sync upload    # Upload approved changes
+echo_access sync download  # Download from cloud
 ```
 
 ## Triggers

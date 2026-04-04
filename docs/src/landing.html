@@ -313,7 +313,7 @@
   <div class="badges">
     <img src="https://img.shields.io/badge/rust-1.94+-B0AB98?style=flat-square&logo=rust" alt="Rust">
     <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macos-8B8070?style=flat-square" alt="Platforms">
-    <img src="https://img.shields.io/badge/version-0.1.0-C3BDA8?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/version-0.1.1-C3BDA8?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/license-MIT-C87941?style=flat-square" alt="License">
   </div>
 </section>
@@ -332,8 +332,8 @@
     <p>Automatic conflict detection with diffy. Approval queue for safe uploads. No changes pushed without your explicit consent.</p>
   </div>
   <div class="card">
-    <h3>[ TRIPLE INTERFACE ]</h3>
-    <p>CLI for automation. NieR:Automata-styled TUI for interactive use. REST API for remote management. All share one core library.</p>
+    <h3>[ UNIFIED BINARY ]</h3>
+    <p>One binary, three modes. CLI for automation. NieR:Automata-styled TUI for interactive use. Web dashboard with auto-open browser. All built into a single <code>echo_access</code> command.</p>
   </div>
   <div class="card">
     <h3>[ PLUGGABLE STORAGE ]</h3>
@@ -360,7 +360,7 @@
         <div class="terminal-dot r"></div>
         <div class="terminal-dot y"></div>
         <div class="terminal-dot g"></div>
-        <div class="terminal-title">echoax-cli</div>
+        <div class="terminal-title">echo_access</div>
       </div>
       <div class="terminal-body" id="cli-output"></div>
     </div>
@@ -369,7 +369,7 @@
   <div id="demo-tui" class="demo-content">
     <div class="tui-frame">
       <div class="tui-header">
-        <span>EchoAccess v0.1.0</span>
+        <span>EchoAccess v0.1.1</span>
         <span>Session: <span style="color:var(--accent-rare)">Unlocked</span> | Cloud: <span style="color:var(--accent-rare)">Connected</span></span>
       </div>
       <div class="tui-body">
@@ -397,7 +397,7 @@
         <div class="terminal-dot r"></div>
         <div class="terminal-dot y"></div>
         <div class="terminal-dot g"></div>
-        <div class="terminal-title">curl — echoax-web :9876</div>
+        <div class="terminal-title">curl — echo_access web :9876</div>
       </div>
       <div class="terminal-body" id="api-output"></div>
     </div>
@@ -406,14 +406,12 @@
 
 <section class="arch-section">
   <h2>// ARCHITECTURE</h2>
-  <div class="arch-grid">
-    <div class="arch-cell header">CLI</div>
-    <div class="arch-cell header">TUI</div>
-    <div class="arch-cell header">WEB API</div>
+  <div class="arch-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="arch-cell header">UNIFIED BINARY</div>
+    <div class="arch-cell header">TUI LIBRARY</div>
     <div class="arch-cell header">CORE</div>
-    <div class="arch-cell"><div class="name">echoax-cli</div><div class="desc">clap subcommands</div></div>
+    <div class="arch-cell"><div class="name">echo_access</div><div class="desc">CLI + Web + TUI</div></div>
     <div class="arch-cell"><div class="name">echoax-tui</div><div class="desc">ratatui + NieR</div></div>
-    <div class="arch-cell"><div class="name">echoax-web</div><div class="desc">axum REST</div></div>
     <div class="arch-cell"><div class="name">echoax-core</div><div class="desc">12 modules</div></div>
   </div>
   <div class="arch-grid" style="margin-top: 1px;">
@@ -430,32 +428,32 @@
 
 <section class="cta">
   <h2>// GET STARTED</h2>
-  <a href="https://github.com/shendeguize/EchoAccess/releases/latest" class="btn-primary">DOWNLOAD v0.1.0</a>
+  <a href="https://github.com/shendeguize/EchoAccess/releases/latest" class="btn-primary">DOWNLOAD v0.1.1</a>
   <a href="guide/installation.html" class="btn-outline">INSTALL GUIDE</a>
   <a href="https://github.com/shendeguize/EchoAccess" class="btn-outline">VIEW SOURCE</a>
 </section>
 
 <footer>
-  ECHOACCESS v0.1.0 // BUILT WITH RUST // <a href="https://github.com/shendeguize/EchoAccess">GITHUB</a>
+  ECHOACCESS v0.1.1 // BUILT WITH RUST // <a href="https://github.com/shendeguize/EchoAccess">GITHUB</a>
 </footer>
 
 <script>
 const cliLines = [
-  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli init' },{ type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echo_access init' },{ type: 'br' },
   { type: 'output', text: 'Initializing EchoAccess...' },{ type: 'br' },
   { type: 'success', text: 'Created ~/.config/echoax/' },{ type: 'br' },
   { type: 'success', text: 'Created ~/.config/echoax/profiles/' },{ type: 'br' },
   { type: 'br' },
-  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli status' },{ type: 'br' },
-  { type: 'output', text: 'EchoAccess v0.1.0' },{ type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echo_access status' },{ type: 'br' },
+  { type: 'output', text: 'EchoAccess v0.1.1' },{ type: 'br' },
   { type: 'output', text: 'Session  : Locked' },{ type: 'br' },
   { type: 'output', text: 'Cloud    : Disconnected' },{ type: 'br' },
   { type: 'output', text: 'Profiles : 0 loaded' },{ type: 'br' },
   { type: 'br' },
-  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli profile validate my-server.toml' },{ type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echo_access profile validate my-server.toml' },{ type: 'br' },
   { type: 'success', text: "Profile 'srv-01' is valid (3 sync rules)" },{ type: 'br' },
   { type: 'br' },
-  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli sync check' },{ type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echo_access sync check' },{ type: 'br' },
   { type: 'output', text: 'Checking sync status...' },{ type: 'br' },
   { type: 'success', text: '  ssh/config.base     synced' },{ type: 'br' },
   { type: 'warn',    text: '  git/gitconfig.toml  CONFLICT (local + remote changed)' },{ type: 'br' },
@@ -468,7 +466,7 @@ const apiLines = [
   { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'curl -s http://127.0.0.1:9876/api/health | jq' },{ type: 'br' },
   { type: 'output', text: '{' },{ type: 'br' },
   { type: 'success', text: '  "status": "ok",' },{ type: 'br' },
-  { type: 'output', text: '  "version": "0.1.0"' },{ type: 'br' },
+  { type: 'output', text: '  "version": "0.1.1"' },{ type: 'br' },
   { type: 'output', text: '}' },{ type: 'br' },
   { type: 'br' },
   { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'curl -s http://127.0.0.1:9876/api/status | jq' },{ type: 'br' },

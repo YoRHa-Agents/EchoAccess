@@ -7,9 +7,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nicholasjng/EchoAccess/actions"><img src="https://img.shields.io/github/actions/workflow/status/nicholasjng/EchoAccess/ci.yml?style=flat-square&label=CI" alt="CI"></a>
+  <a href="https://github.com/shendeguize/EchoAccess/actions"><img src="https://img.shields.io/github/actions/workflow/status/shendeguize/EchoAccess/ci.yml?style=flat-square&label=CI" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-C87941?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-C3BDA8?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-0.1.1-C3BDA8?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/rust-1.94+-B0AB98?style=flat-square&logo=rust" alt="Rust">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macos-8B8070?style=flat-square" alt="Platforms">
 </p>
@@ -33,7 +33,7 @@
 | **Sync** | Profile-based sync | Per-device TOML profiles with field-level overrides and masking |
 | **Security** | Dual encryption | `age` file encryption + AES-256-GCM field-level encryption |
 | **Merge** | 3-way merge | Automatic merge with conflict detection and approval queue |
-| **UI** | Triple interface | CLI (clap) + TUI (ratatui/NieR) + Web API (axum REST) |
+| **UI** | Unified binary | Single `echo_access` binary: CLI + TUI (ratatui/NieR) + Web dashboard (axum) |
 | **Cloud** | Pluggable storage | S3-compatible backends via `CloudBackend` trait |
 | **Devices** | SSH device push | Discover from `~/.ssh/config`, push configs via SSH |
 | **Permissions** | Cross-platform | Policy-based permissions (POSIX + Windows) |
@@ -50,9 +50,8 @@ echoax/
 │   ├── echoax-core/        12 modules: config, crypto, device, error,
 │   │                       permission, portability, profile, storage,
 │   │                       sync, trigger, ui, updater
-│   ├── echoax-cli/         CLI binary — clap subcommands
-│   ├── echoax-tui/         TUI binary — ratatui + NieR: Automata theme
-│   └── echoax-web/         Web API binary — axum REST + WebSocket
+│   ├── echoax-cli/         Unified binary (echo_access) — CLI + Web dashboard
+│   └── echoax-tui/         TUI library — ratatui + NieR: Automata theme
 ```
 
 ---
@@ -65,16 +64,16 @@ Download the latest release for your platform:
 
 ```bash
 # Linux x86_64
-curl -fsSL https://github.com/nicholasjng/EchoAccess/releases/latest/download/echoax-v0.1.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
 
 # macOS Apple Silicon
-curl -fsSL https://github.com/nicholasjng/EchoAccess/releases/latest/download/echoax-v0.1.0-aarch64-apple-darwin.tar.gz | tar xz
+curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.1-aarch64-apple-darwin.tar.gz | tar xz
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/nicholasjng/EchoAccess.git
+git clone https://github.com/shendeguize/EchoAccess.git
 cd EchoAccess
 cargo build --release --workspace
 ```
@@ -84,27 +83,22 @@ cargo build --release --workspace
 ## Quick Start
 
 ```bash
-# Initialize EchoAccess on this device
-echoax-cli init
+# Launch Web UI (default — opens browser automatically)
+echo_access
 
-# Check sync status
-echoax-cli status
+# Or explicitly
+echo_access web --port 9876
 
-# Validate a device profile
-echoax-cli profile validate profiles/my-device.toml
+# CLI commands
+echo_access init
+echo_access status
+echo_access profile validate profiles/my-device.toml
+echo_access sync upload
+echo_access sync download
+echo_access config path
 
-# View configuration path
-echoax-cli config path
-
-# Sync files
-echoax-cli sync upload
-echoax-cli sync download
-
-# Start the TUI dashboard
-echoax-tui
-
-# Start the Web API
-echoax-web  # http://127.0.0.1:9876
+# TUI mode
+echo_access tui
 ```
 
 ---
@@ -135,7 +129,7 @@ masked_fields = ["Host desktop-*"]
 
 ```bash
 cargo build --workspace          # Build all crates
-cargo test --workspace           # Run 95 tests
+cargo test --workspace           # Run 100 tests
 cargo clippy --workspace         # Lint
 cargo fmt --all --check          # Format check
 ```
@@ -143,10 +137,10 @@ cargo fmt --all --check          # Format check
 ### Release Build (all platforms)
 
 ```bash
-./scripts/build-release.sh 0.1.0
+./scripts/build-release.sh 0.1.1
 ```
 
-Produces `dist/echoax-v0.1.0-{target}.tar.gz` for each platform.
+Produces `dist/echoax-v0.1.1-{target}.tar.gz` for each platform.
 
 ---
 

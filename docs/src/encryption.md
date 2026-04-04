@@ -29,8 +29,8 @@ Field encryption uses the field's path (e.g., `database.password`) as Additional
 Access to encrypted files requires an unlocked session:
 
 ```bash
-echoax-cli unlock    # Unlock with master password
-echoax-cli lock      # Lock session (clears key from memory)
+echo_access unlock    # Unlock with master password
+echo_access lock      # Lock session (clears key from memory)
 ```
 
 The session auto-locks after the configured timeout (default: 15 minutes).

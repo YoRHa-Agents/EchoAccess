@@ -4,11 +4,10 @@ members = [
     "crates/echoax-core",
     "crates/echoax-cli",
     "crates/echoax-tui",
-    "crates/echoax-web",
 ]
 
 [workspace.package]
 edition = "2021"
-version = "0.1.0"
+version = "0.1.1"
 
 [workspace.dependencies]

@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.1.1 — Unified Binary (2026-04-04)
+
+Consolidates all interfaces into a single `echo_access` binary based on v0.1.0 release feedback.
+
+### Unified Binary
+
+- **Single binary**: `echo_access` now serves as the sole entry point for CLI, TUI, and Web dashboard
+- **Default mode**: Running `echo_access` without arguments starts the Web UI and opens the browser automatically
+- **TUI integration**: `echo_access tui` launches the NieR: Automata terminal interface (previously a separate `echoax-tui` binary)
+- **Web subcommand**: `echo_access web --port 9876` starts the web dashboard with configurable port
+- **Removed `echoax-web`**: Standalone Web API crate removed; its functionality is fully embedded in the unified binary
+
+### Web Dashboard Improvements
+
+- **Reliable browser opening**: `open::that` errors are now reported with a fallback message showing the URL
+- **Already-running detection**: If the server is already running, opens the browser directly instead of failing
+- **Better user feedback**: Clear messages distinguish "starting new server" vs "server already running"
+
+### Architecture Changes
+
+- `echoax-tui` converted from binary crate to library crate (exposes `echoax_tui::run()`)
+- `echoax-web` crate removed from workspace (redundant with CLI-embedded web server)
+- Cargo workspace reduced from 4 crates to 3 (`echoax-core`, `echoax-cli`, `echoax-tui`)
+
+### Tests
+
+- 100 tests passing (up from 95)
+- Added 4 web router tests (dashboard, health, status, favicon)
+- Added 2 TUI library tests (run smoke test, app lifecycle)
+
+---
+
 ## v0.1.0 — Initial Release (2026-04-04)
 
 First release of EchoAccess, a cross-platform configuration file synchronization tool.

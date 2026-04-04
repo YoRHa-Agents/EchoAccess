@@ -48,6 +48,6 @@ channel = "stable"
 ### View Configuration
 
 ```bash
-echoax-cli config show    # Display current config
-echoax-cli config path    # Show config file location
+echo_access config show    # Display current config
+echo_access config path    # Show config file location
 ```
