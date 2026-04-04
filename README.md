@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/shendeguize/EchoAccess/actions"><img src="https://img.shields.io/github/actions/workflow/status/shendeguize/EchoAccess/ci.yml?style=flat-square&label=CI" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-C87941?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/version-0.1.1-C3BDA8?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-0.1.2-C3BDA8?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/rust-1.94+-B0AB98?style=flat-square&logo=rust" alt="Rust">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macos-8B8070?style=flat-square" alt="Platforms">
 </p>
@@ -64,10 +64,10 @@ Download the latest release for your platform:
 
 ```bash
 # Linux x86_64
-curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.2-x86_64-unknown-linux-gnu.tar.gz | tar xz
 
 # macOS Apple Silicon
-curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.1-aarch64-apple-darwin.tar.gz | tar xz
+curl -fsSL https://github.com/shendeguize/EchoAccess/releases/latest/download/echoax-v0.1.2-aarch64-apple-darwin.tar.gz | tar xz
 ```
 
 ### From Source
@@ -137,10 +137,10 @@ cargo fmt --all --check          # Format check
 ### Release Build (all platforms)
 
 ```bash
-./scripts/build-release.sh 0.1.1
+./scripts/build-release.sh 0.1.2
 ```
 
-Produces `dist/echoax-v0.1.1-{target}.tar.gz` for each platform.
+Produces `dist/echoax-v0.1.2-{target}.tar.gz` for each platform.
 
 ---
 
