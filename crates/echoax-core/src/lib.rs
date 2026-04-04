@@ -7,6 +7,7 @@ pub mod portability;
 pub mod profile;
 pub mod storage;
 pub mod sync;
+pub mod trigger;
 pub mod ui;
 pub mod updater;
 

@@ -10,3 +10,5 @@ path = "src/main.rs"
 [dependencies]
 echoax-core = { path = "../echoax-core" }
 tokio = { version = "1", features = ["full"] }
+ratatui = "0.29"
+crossterm = "0.28"
