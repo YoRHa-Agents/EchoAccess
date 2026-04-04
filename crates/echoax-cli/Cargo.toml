@@ -10,3 +10,7 @@ path = "src/main.rs"
 [dependencies]
 echoax-core = { path = "../echoax-core" }
 tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+indicatif = "0.17"
+dirs = "6"
