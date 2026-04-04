@@ -1,5 +1,74 @@
 # Changelog
 
+## v0.1.3 — Deep Fix & Feature Iteration (2026-04-04)
+
+Major release bridging the gap between the core library and user-facing interfaces. Web dashboard upgraded from demo to functional, TUI made interactive, CLI commands wired to real data, and new sync group management and conflict resolution capabilities added.
+
+### Web Dashboard (Major Overhaul)
+
+- **Dynamic file list**: Files now load from `/api/files` instead of hardcoded HTML
+- **Configuration management**: Full config panel with tabs for General, Session, Trigger, Cloud, and Update sections
+- **Config CRUD**: Read/write config via `GET/PUT /api/config`, saved to `config.toml`
+- **File tracking**: Add/remove tracked files via `/api/files/add` and `/api/files/remove`
+- **Real sync operations**: Upload/download buttons call `/api/sync/upload` and `/api/sync/download`
+- **Live status**: `/api/status` returns real runtime state (session, cloud, file counts)
+- **Profile listing**: `/api/profiles` scans and loads profile TOML files
+- **Session management**: Lock/unlock session via `/api/session`
+- **Toast notifications**: Success/error feedback for all operations
+- **Loading states**: Button loading indicators and skeleton loading for file list
+- **Responsive layout**: Mobile-friendly with proper breakpoints
+- **Empty states**: Helpful messages when no files are tracked
+
+### TUI (Terminal User Interface)
+
+- **Working event loop**: Full crossterm + ratatui interactive terminal
+- **Three views**: Dashboard, Sync, and Profiles with tab-based navigation
+- **Keyboard navigation**: Tab/Shift-Tab switch views, number keys (1-3) for direct access, q to quit
+- **NieR: Automata theme**: Consistent styling across all views
+- **Graceful exit**: Proper terminal state restoration on exit
+
+### Sync Groups & Batch Operations
+
+- **SyncGroup model**: Named groups with path prefixes, include/exclude globs, and tags
+- **GroupStore**: In-memory group CRUD with path resolution
+- **Batch sync**: `/api/sync/batch` syncs all files in a group at once
+- **Group membership**: `/api/groups/{id}/members` shows which tracked files belong to a group
+- **Tag filtering**: Groups support tags for selective operations
+
+### Conflict Resolution
+
+- **ConflictStore**: Track, list, and resolve file conflicts
+- **Resolution strategies**: Accept ours, theirs, base, or provide custom merged content
+- **ConflictView**: Rich view with base/ours/theirs content for UI display
+- **API endpoints**: `/api/conflicts` lists conflicts, `/api/conflicts/resolve` resolves them
+
+### CLI Improvements
+
+- **`config show`**: Now loads and displays actual `config.toml` content
+- **`init`**: Creates default `config.toml` on first run
+- **`status`**: Shows real cloud connection status from config
+- **`profile list`**: Scans profiles directory and lists found profiles
+- **`profile show`**: Displays profile details including sync rules
+- **`sync check`**: Reports engine status and profile count
+- **`sync upload/download`**: Shows cloud config status, reports SDK integration status
+
+### Architecture
+
+- **AppState**: Shared state struct with `Arc<RwLock<...>>` for concurrent access
+- **21 API endpoints**: Up from 4 (health, status, config, files, sync, profiles, session, groups, conflicts)
+- **Core library wiring**: AppConfig, SessionManager, SyncEngine, GroupStore, ConflictStore all connected to web layer
+
+### Tests
+
+- **127 tests passing** (up from 100)
+- Added 5 group API tests (CRUD, members, batch sync)
+- Added 2 conflict API tests (list, resolve)
+- Added 13 core tests (groups: 7, conflicts: 6)
+- Added 2 TUI tests (key handling, view navigation)
+- All existing 94 core tests continue to pass
+
+---
+
 ## v0.1.2 — Unified Binary (2026-04-04)
 
 Bugfix: validate dashboard route before opening browser to an existing instance.
