@@ -7,4 +7,4 @@ src = "src"
 [output.html]
 additional-css = ["theme/nier.css"]
 default-theme = "coal"
-git-repository-url = "https://github.com/shendeguize/EchoAccess"
+git-repository-url = "https://github.com/YoRHa-Agents/EchoAccess"
