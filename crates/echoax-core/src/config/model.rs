@@ -116,6 +116,8 @@ impl Default for CloudConfig {
 pub struct UpdateConfig {
     #[serde(default = "default_true")]
     pub auto_check: bool,
+    #[serde(default = "default_check_interval_hours")]
+    pub check_interval_hours: u64,
     #[serde(default)]
     pub channel: String,
 }
@@ -124,10 +126,15 @@ fn default_true() -> bool {
     true
 }
 
+fn default_check_interval_hours() -> u64 {
+    24
+}
+
 impl Default for UpdateConfig {
     fn default() -> Self {
         Self {
             auto_check: default_true(),
+            check_interval_hours: default_check_interval_hours(),
             channel: String::new(),
         }
     }
@@ -172,6 +179,7 @@ sync_interval_secs = 120
 [update]
 auto_check = false
 channel = "beta"
+check_interval_hours = 48
 "#;
         let cfg = AppConfig::from_toml_str(toml_str).unwrap();
         assert_eq!(cfg.general.language, "zh");
@@ -186,6 +194,7 @@ channel = "beta"
         assert_eq!(cfg.cloud.sync_interval_secs, 120);
         assert!(!cfg.update.auto_check);
         assert_eq!(cfg.update.channel, "beta");
+        assert_eq!(cfg.update.check_interval_hours, 48);
     }
 
     #[test]
@@ -201,6 +210,7 @@ channel = "beta"
         assert!(!cfg.cloud.enabled);
         assert_eq!(cfg.cloud.sync_interval_secs, 60);
         assert!(cfg.update.auto_check);
+        assert_eq!(cfg.update.check_interval_hours, 24);
     }
 
     #[test]
