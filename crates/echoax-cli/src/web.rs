@@ -55,18 +55,53 @@ fn try_open_browser(url: &str) {
     }
 }
 
+async fn check_existing_instance(url: &str) -> Option<bool> {
+    let health_resp = reqwest::get(format!("{url}/api/health")).await.ok()?;
+    if !health_resp.status().is_success() {
+        return None;
+    }
+
+    let body = health_resp.text().await.ok()?;
+    let health: Value = serde_json::from_str(&body).ok()?;
+    let remote_version = health.get("version")?.as_str()?;
+    let our_version = env!("CARGO_PKG_VERSION");
+
+    if remote_version != our_version {
+        eprintln!(
+            "Warning: a different EchoAccess version (v{remote_version}) is running on {url}"
+        );
+        eprintln!("This instance is v{our_version}. Stop the old process first.");
+        return Some(false);
+    }
+
+    let dash_resp = reqwest::get(url).await.ok()?;
+    if !dash_resp.status().is_success() {
+        eprintln!("Warning: an old EchoAccess process on {url} has no web dashboard.");
+        eprintln!("Stop the old process and try again.");
+        return Some(false);
+    }
+
+    Some(true)
+}
+
 pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
     let addr = format!("127.0.0.1:{port}");
     let url = format!("http://{addr}");
 
-    if let Ok(resp) = reqwest::get(format!("{url}/api/health")).await {
-        if resp.status().is_success() {
+    match check_existing_instance(&url).await {
+        Some(true) => {
             println!("EchoAccess is already running at {url}");
             if !no_open {
                 try_open_browser(&url);
             }
             return Ok(());
         }
+        Some(false) => {
+            return Err(echoax_core::EchoAccessError::Network(format!(
+                "Port {port} is occupied by an incompatible process. Stop it and retry."
+            )));
+        }
+        None => {}
     }
 
     let app = create_router();
