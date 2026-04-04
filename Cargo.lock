@@ -648,24 +648,26 @@ dependencies = [
 
 [[package]]
 name = "echoax-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "clap",
  "clap_complete",
  "dirs",
  "echoax-core",
+ "echoax-tui",
  "indicatif",
  "open",
  "reqwest",
  "serde_json",
  "tokio",
+ "tower",
  "tower-http",
 ]
 
 [[package]]
 name = "echoax-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aes-gcm",
  "age",
@@ -688,24 +690,12 @@ dependencies = [
 
 [[package]]
 name = "echoax-tui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "crossterm",
  "echoax-core",
  "ratatui",
  "tokio",
-]
-
-[[package]]
-name = "echoax-web"
-version = "0.1.0"
-dependencies = [
- "axum",
- "echoax-core",
- "serde_json",
- "tokio",
- "tower",
- "tower-http",
 ]
 
 [[package]]

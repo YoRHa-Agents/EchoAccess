@@ -35,7 +35,7 @@ Each `[[sync_rules]]` entry defines one file to synchronize:
 ## Managing Profiles
 
 ```bash
-echoax-cli profile list               # List all profiles
-echoax-cli profile show <name>        # Display profile details
-echoax-cli profile validate <path>    # Validate TOML syntax + rules
+echo_access profile list               # List all profiles
+echo_access profile show <name>        # Display profile details
+echo_access profile validate <path>    # Validate TOML syntax + rules
 ```

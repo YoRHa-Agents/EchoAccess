@@ -45,6 +45,16 @@ pub fn create_router() -> Router {
         .route("/api/status", get(api_status))
 }
 
+fn try_open_browser(url: &str) {
+    match open::that(url) {
+        Ok(()) => println!("Browser opened at {url}"),
+        Err(e) => {
+            eprintln!("Could not open browser automatically: {e}");
+            println!("Please visit {url} in your browser");
+        }
+    }
+}
+
 pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
     let addr = format!("127.0.0.1:{port}");
     let url = format!("http://{addr}");
@@ -53,7 +63,7 @@ pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
         if resp.status().is_success() {
             println!("EchoAccess is already running at {url}");
             if !no_open {
-                let _ = open::that(&url);
+                try_open_browser(&url);
             }
             return Ok(());
         }
@@ -70,8 +80,8 @@ pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
     if !no_open {
         let open_url = url.clone();
         tokio::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-            let _ = open::that(&open_url);
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            try_open_browser(&open_url);
         });
     }
 
@@ -82,4 +92,58 @@ pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
         .map_err(|e| echoax_core::EchoAccessError::Network(format!("Server error: {e}")))?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use tower::util::ServiceExt;
+
+    #[tokio::test]
+    async fn dashboard_returns_ok() {
+        let app = create_router();
+        let req = Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn health_returns_ok_with_version() {
+        let app = create_router();
+        let req = Request::builder()
+            .uri("/api/health")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn status_returns_ok() {
+        let app = create_router();
+        let req = Request::builder()
+            .uri("/api/status")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn favicon_returns_svg() {
+        let app = create_router();
+        let req = Request::builder()
+            .uri("/favicon.ico")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let content_type = resp.headers().get("content-type").unwrap();
+        assert_eq!(content_type, "image/svg+xml");
+    }
 }

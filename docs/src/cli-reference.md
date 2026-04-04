@@ -1,5 +1,13 @@
 # CLI Reference
 
+## Usage
+
+```
+echo_access [OPTIONS] [COMMAND]
+```
+
+Running `echo_access` without any command starts the Web UI dashboard.
+
 ## Global Flags
 
 | Flag | Description |
@@ -10,15 +18,28 @@
 
 ## Commands
 
-### `echoax-cli init`
+### `echo_access web`
+
+Start the Web UI dashboard (this is also the default when no command is given).
+
+| Flag | Description |
+|------|-------------|
+| `--port <PORT>` | Port to listen on (default: 9876) |
+| `--no-open` | Don't auto-open the browser |
+
+### `echo_access tui`
+
+Launch the NieR: Automata-styled TUI terminal dashboard.
+
+### `echo_access init`
 
 Initialize EchoAccess on the current device. Creates `~/.config/echoax/` directory structure.
 
-### `echoax-cli status`
+### `echo_access status`
 
 Display current sync status, session state, and cloud connection.
 
-### `echoax-cli sync`
+### `echo_access sync`
 
 | Subcommand | Description |
 |------------|-------------|
@@ -26,7 +47,7 @@ Display current sync status, session state, and cloud connection.
 | `sync download` | Download latest configs from cloud |
 | `sync check` | Check for differences without syncing |
 
-### `echoax-cli profile`
+### `echo_access profile`
 
 | Subcommand | Description |
 |------------|-------------|
@@ -34,7 +55,7 @@ Display current sync status, session state, and cloud connection.
 | `profile show <name>` | Display profile details |
 | `profile validate <path>` | Validate a TOML profile file |
 
-### `echoax-cli config`
+### `echo_access config`
 
 | Subcommand | Description |
 |------------|-------------|

@@ -12,11 +12,18 @@ EchoAccess is a cross-platform configuration file synchronization tool written i
 
 ## Architecture Overview
 
-EchoAccess consists of four components:
+EchoAccess ships as a single unified binary (`echo_access`) with three interface modes:
 
-| Component | Binary | Purpose |
-|-----------|--------|---------|
-| Core library | — | Shared logic for all interfaces |
-| CLI | `echoax-cli` | Command-line interface (clap) |
-| TUI | `echoax-tui` | Terminal dashboard (ratatui) |
-| Web API | `echoax-web` | REST API (axum) on port 9876 |
+| Mode | Command | Purpose |
+|------|---------|---------|
+| Web (default) | `echo_access` | Web dashboard with auto-open browser |
+| CLI | `echo_access <command>` | Command-line subcommands (clap) |
+| TUI | `echo_access tui` | NieR: Automata terminal dashboard (ratatui) |
+
+The codebase consists of three crates:
+
+| Crate | Type | Purpose |
+|-------|------|---------|
+| `echoax-core` | Library | Shared logic for all interfaces |
+| `echoax-cli` | Binary | Unified binary (`echo_access`) — CLI + Web dashboard |
+| `echoax-tui` | Library | TUI terminal interface (ratatui + NieR theme) |

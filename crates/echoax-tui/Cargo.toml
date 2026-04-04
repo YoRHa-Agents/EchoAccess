@@ -3,6 +3,10 @@ name = "echoax-tui"
 edition.workspace = true
 version.workspace = true
 
+[lib]
+name = "echoax_tui"
+path = "src/lib.rs"
+
 [[bin]]
 name = "echoax-tui"
 path = "src/main.rs"

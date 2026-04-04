@@ -35,11 +35,7 @@ pub enum Commands {
 pub async fn execute(cmd: Commands, verbose: bool) -> echoax_core::Result<()> {
     match cmd {
         Commands::Web { port, no_open } => crate::web::start_server(port, no_open).await,
-        Commands::Tui => {
-            println!("EchoAccess TUI (NieR: Automata style)");
-            println!("TUI interactive mode coming soon.");
-            Ok(())
-        }
+        Commands::Tui => echoax_tui::run().await,
         Commands::Init => {
             let config_dir = dirs::config_dir().unwrap_or_default().join("echoax");
             std::fs::create_dir_all(config_dir.join("profiles"))
