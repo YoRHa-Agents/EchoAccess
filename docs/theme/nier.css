@@ -1,0 +1,86 @@
+/* EchoAccess — NieR: Automata inspired mdBook theme */
+
+:root {
+    --nier-bg-deep: #2E2A27;
+    --nier-bg-panel: #4B413D;
+    --nier-bg-surface: #594E4A;
+    --nier-fg-primary: #C3BDA8;
+    --nier-fg-secondary: #B0AB98;
+    --nier-accent: #C87941;
+    --nier-highlight: #D4C9B0;
+    --nier-accent-rare: #A8B5A0;
+    --nier-grid: #3A3632;
+    --nier-border: #8B8070;
+}
+
+.coal {
+    --bg: var(--nier-bg-deep);
+    --fg: var(--nier-fg-primary);
+    --sidebar-bg: var(--nier-bg-panel);
+    --sidebar-fg: var(--nier-fg-primary);
+    --sidebar-active: var(--nier-accent);
+    --links: var(--nier-accent);
+    --inline-code-color: var(--nier-highlight);
+    --theme-popup-bg: var(--nier-bg-panel);
+    --theme-popup-border: var(--nier-border);
+    --quote-bg: var(--nier-bg-panel);
+    --quote-border: var(--nier-accent);
+    --table-border-color: var(--nier-border);
+    --table-header-bg: var(--nier-bg-panel);
+    --table-alternate-bg: var(--nier-bg-surface);
+    --searchbar-border-color: var(--nier-border);
+    --searchbar-bg: var(--nier-bg-panel);
+    --searchresults-header-fg: var(--nier-accent);
+}
+
+body {
+    font-family: 'Courier New', 'Source Code Pro', monospace;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--nier-highlight);
+    letter-spacing: 0.05em;
+}
+
+a {
+    color: var(--nier-accent);
+}
+a:hover {
+    color: var(--nier-highlight);
+}
+
+code {
+    background-color: var(--nier-bg-panel);
+    color: var(--nier-highlight);
+    border: 1px solid var(--nier-grid);
+}
+
+pre {
+    background-color: var(--nier-bg-panel) !important;
+    border: 1px solid var(--nier-border);
+}
+
+table th {
+    background-color: var(--nier-bg-panel);
+    color: var(--nier-highlight);
+    border-bottom: 2px solid var(--nier-accent);
+}
+
+table td {
+    border-bottom: 1px solid var(--nier-grid);
+}
+
+blockquote {
+    border-left: 4px solid var(--nier-accent);
+    background-color: var(--nier-bg-panel);
+    padding: 0.5em 1em;
+}
+
+.sidebar .sidebar-scrollbox {
+    background-color: var(--nier-bg-panel);
+}
+
+.chapter li.active > a {
+    color: var(--nier-accent);
+    font-weight: bold;
+}

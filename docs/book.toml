@@ -1,0 +1,10 @@
+[book]
+title = "EchoAccess User Guide"
+authors = ["EchoAccess Contributors"]
+language = "en"
+src = "src"
+
+[output.html]
+additional-css = ["theme/nier.css"]
+default-theme = "coal"
+git-repository-url = "https://github.com/nicholasjng/EchoAccess"

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::mpsc;
 
-use crate::error::{EchoAccessError, Result};
+use crate::error::Result;
 
 pub struct WatcherTrigger {
     paths: Vec<PathBuf>,

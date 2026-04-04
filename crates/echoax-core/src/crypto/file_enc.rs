@@ -8,18 +8,16 @@ use crate::error::{EchoAccessError, Result};
 pub fn encrypt_file(data: &[u8], passphrase: &str) -> Result<Vec<u8>> {
     let secret = SecretString::from(passphrase.to_owned());
     let recipient = age::scrypt::Recipient::new(secret);
-    age::encrypt(&recipient, data).map_err(|e| {
-        EchoAccessError::Crypto(format!("age encrypt failed: {e}"))
-    })
+    age::encrypt(&recipient, data)
+        .map_err(|e| EchoAccessError::Crypto(format!("age encrypt failed: {e}")))
 }
 
 /// Decrypts an age ciphertext produced by [`encrypt_file`].
 pub fn decrypt_file(encrypted: &[u8], passphrase: &str) -> Result<Vec<u8>> {
     let secret = SecretString::from(passphrase.to_owned());
     let identity = age::scrypt::Identity::new(secret);
-    age::decrypt(&identity, encrypted).map_err(|e| {
-        EchoAccessError::Crypto(format!("age decrypt failed: {e}"))
-    })
+    age::decrypt(&identity, encrypted)
+        .map_err(|e| EchoAccessError::Crypto(format!("age decrypt failed: {e}")))
 }
 
 #[cfg(test)]

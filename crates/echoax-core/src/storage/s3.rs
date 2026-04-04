@@ -1,217 +1,98 @@
-use aws_config::BehaviorVersion;
-use aws_sdk_s3::config::{Credentials, Region};
-use aws_sdk_s3::error::SdkError;
-use aws_sdk_s3::primitives::ByteStream;
-use aws_sdk_s3::Client;
-
 use crate::error::{EchoAccessError, Result};
 use crate::storage::traits::CloudBackend;
 
-fn map_sdk_err<E: std::error::Error + Send + Sync + 'static>(
-    op: &'static str,
-    err: SdkError<E>,
-) -> EchoAccessError {
-    EchoAccessError::Storage(format!("S3 {op}: {err}"))
-}
-
-fn is_not_found<E>(err: &SdkError<E>) -> bool {
-    let msg = err.to_string();
-    msg.contains("NotFound")
-        || msg.contains("404")
-        || msg.contains("NoSuchKey")
-        || msg.contains("Not Found")
-}
-
-fn infer_signing_region(endpoint: &str) -> String {
-    if let Some(idx) = endpoint.find("oss-") {
-        let after = &endpoint[idx + "oss-".len()..];
-        if let Some(dot) = after.find('.') {
-            return after[..dot].to_string();
-        }
-    }
-    "us-east-1".to_string()
-}
-
-/// S3-compatible backend (Aliyun OSS, MinIO, AWS S3) using a custom endpoint URL.
 pub struct S3Backend {
-    client: Client,
+    endpoint: String,
     bucket: String,
+    prefix: String,
 }
 
 impl S3Backend {
-    /// Builds a client for `endpoint` (e.g. `https://echo-access-data.oss-cn-beijing.aliyuncs.com`),
-    /// `bucket`, and static access keys. Signing region is inferred from Aliyun-style endpoints
-    /// (`oss-<region>.aliyuncs.com`); otherwise defaults to `us-east-1`.
-    pub fn new(
-        endpoint: impl Into<String>,
-        bucket: impl Into<String>,
-        access_key_id: impl Into<String>,
-        access_key_secret: impl Into<String>,
-    ) -> Self {
-        let endpoint = endpoint.into();
-        let bucket = bucket.into();
-        let access_key_id = access_key_id.into();
-        let access_key_secret = access_key_secret.into();
-        let region = infer_signing_region(&endpoint);
-
-        let credentials = Credentials::new(
-            access_key_id,
-            access_key_secret,
-            None,
-            None,
-            "echoax-static",
-        );
-
-        let config = aws_sdk_s3::Config::builder()
-            .behavior_version(BehaviorVersion::latest())
-            .region(Region::new(region))
-            .credentials_provider(credentials)
-            .endpoint_url(endpoint)
-            .force_path_style(false)
-            .build();
-
-        let client = Client::from_conf(config);
-        Self { client, bucket }
+    pub fn new(endpoint: String, bucket: String, prefix: String) -> Self {
+        Self {
+            endpoint,
+            bucket,
+            prefix,
+        }
     }
 
-    /// Bucket name configured for this backend.
+    pub fn endpoint(&self) -> &str {
+        &self.endpoint
+    }
+
     pub fn bucket(&self) -> &str {
         &self.bucket
+    }
+
+    fn full_key(&self, key: &str) -> String {
+        format!("{}{}", self.prefix, key)
     }
 }
 
 #[async_trait::async_trait]
 impl CloudBackend for S3Backend {
-    async fn upload(&self, key: &str, data: &[u8]) -> Result<()> {
-        self.client
-            .put_object()
-            .bucket(&self.bucket)
-            .key(key)
-            .body(ByteStream::from(data.to_vec()))
-            .send()
-            .await
-            .map_err(|e| map_sdk_err("put_object", e))?;
-        Ok(())
+    async fn upload(&self, key: &str, _data: &[u8]) -> Result<()> {
+        let _full = self.full_key(key);
+        // TODO: implement with reqwest or aws-sdk-s3 (behind feature flag)
+        Err(EchoAccessError::Storage(
+            "S3 upload: awaiting SDK integration".into(),
+        ))
     }
 
     async fn download(&self, key: &str) -> Result<Vec<u8>> {
-        let out = self
-            .client
-            .get_object()
-            .bucket(&self.bucket)
-            .key(key)
-            .send()
-            .await
-            .map_err(|e| map_sdk_err("get_object", e))?;
-        let aggregated = out
-            .body
-            .collect()
-            .await
-            .map_err(|e| EchoAccessError::Storage(format!("S3 read body: {e}")))?;
-        Ok(aggregated.into_bytes().to_vec())
+        let _full = self.full_key(key);
+        Err(EchoAccessError::Storage(
+            "S3 download: awaiting SDK integration".into(),
+        ))
     }
 
     async fn delete(&self, key: &str) -> Result<()> {
-        self.client
-            .delete_object()
-            .bucket(&self.bucket)
-            .key(key)
-            .send()
-            .await
-            .map_err(|e| map_sdk_err("delete_object", e))?;
-        Ok(())
+        let _full = self.full_key(key);
+        Err(EchoAccessError::Storage(
+            "S3 delete: awaiting SDK integration".into(),
+        ))
     }
 
     async fn list(&self, prefix: &str) -> Result<Vec<String>> {
-        let mut keys = Vec::new();
-        let mut continuation_token = None::<String>;
-
-        loop {
-            let resp = self
-                .client
-                .list_objects_v2()
-                .bucket(&self.bucket)
-                .prefix(prefix)
-                .set_continuation_token(continuation_token.clone())
-                .send()
-                .await
-                .map_err(|e| map_sdk_err("list_objects_v2", e))?;
-
-            for obj in resp.contents() {
-                if let Some(k) = obj.key() {
-                    keys.push(k.to_string());
-                }
-            }
-
-            continuation_token = resp.next_continuation_token().map(|t| t.to_string());
-            if continuation_token.is_none() {
-                break;
-            }
-        }
-
-        Ok(keys)
+        let _full = self.full_key(prefix);
+        Err(EchoAccessError::Storage(
+            "S3 list: awaiting SDK integration".into(),
+        ))
     }
 
     async fn exists(&self, key: &str) -> Result<bool> {
-        match self
-            .client
-            .head_object()
-            .bucket(&self.bucket)
-            .key(key)
-            .send()
-            .await
-        {
-            Ok(_) => Ok(true),
-            Err(e) if is_not_found(&e) => Ok(false),
-            Err(e) => Err(map_sdk_err("head_object", e)),
-        }
+        let _full = self.full_key(key);
+        Err(EchoAccessError::Storage(
+            "S3 exists: awaiting SDK integration".into(),
+        ))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::traits::CloudBackend;
-
-    struct NoopBackend;
-
-    #[async_trait::async_trait]
-    impl CloudBackend for NoopBackend {
-        async fn upload(&self, _key: &str, _data: &[u8]) -> Result<()> {
-            Ok(())
-        }
-
-        async fn download(&self, _key: &str) -> Result<Vec<u8>> {
-            Ok(Vec::new())
-        }
-
-        async fn delete(&self, _key: &str) -> Result<()> {
-            Ok(())
-        }
-
-        async fn list(&self, _prefix: &str) -> Result<Vec<String>> {
-            Ok(Vec::new())
-        }
-
-        async fn exists(&self, _key: &str) -> Result<bool> {
-            Ok(false)
-        }
-    }
-
-    #[tokio::test]
-    async fn cloud_backend_trait_is_object_safe() {
-        let backend: Box<dyn CloudBackend> = Box::new(NoopBackend);
-        assert!(!backend.exists("k").await.unwrap());
-    }
 
     #[test]
     fn s3_backend_construction() {
-        let b = S3Backend::new(
-            "https://echo-access-data.oss-cn-beijing.aliyuncs.com",
-            "my-bucket",
-            "test-access-key-id",
-            "test-secret",
+        let backend = S3Backend::new(
+            "https://oss-cn-beijing.aliyuncs.com".into(),
+            "echo-access-data".into(),
+            "user/".into(),
         );
-        assert_eq!(b.bucket(), "my-bucket");
+        assert_eq!(backend.endpoint(), "https://oss-cn-beijing.aliyuncs.com");
+        assert_eq!(backend.bucket(), "echo-access-data");
+    }
+
+    #[test]
+    fn full_key_includes_prefix() {
+        let backend = S3Backend::new(String::new(), String::new(), "pfx/".into());
+        assert_eq!(backend.full_key("file.txt"), "pfx/file.txt");
+    }
+
+    #[tokio::test]
+    async fn methods_return_awaiting_integration() {
+        let backend = S3Backend::new(String::new(), String::new(), String::new());
+        assert!(backend.upload("k", b"v").await.is_err());
+        assert!(backend.download("k").await.is_err());
     }
 }

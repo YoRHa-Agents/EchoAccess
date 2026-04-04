@@ -22,12 +22,7 @@ impl SyncEngine {
         merge::compute_diff(source, target)
     }
 
-    pub fn three_way_merge(
-        &self,
-        base: &str,
-        ours: &str,
-        theirs: &str,
-    ) -> Result<MergeResult> {
+    pub fn three_way_merge(&self, base: &str, ours: &str, theirs: &str) -> Result<MergeResult> {
         merge::three_way_merge(base, ours, theirs)
     }
 }

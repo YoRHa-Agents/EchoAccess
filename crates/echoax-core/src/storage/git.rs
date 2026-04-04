@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use crate::error::{EchoAccessError, Result};
 use super::traits::CloudBackend;
+use crate::error::{EchoAccessError, Result};
 
 pub struct GitBackend {
     repo_path: PathBuf,

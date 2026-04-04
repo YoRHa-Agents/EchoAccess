@@ -8,7 +8,7 @@ pub async fn install_update(download_url: &str, checksum_url: &str) -> Result<()
         checksum_url = %checksum_url,
         "Update installation not yet fully implemented"
     );
-    std::hint::black_box(self_update::get_target());
+    // TODO: implement actual download + self_replace when self_update is connected
     Ok(())
 }
 

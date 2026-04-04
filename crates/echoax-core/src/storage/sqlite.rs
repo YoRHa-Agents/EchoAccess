@@ -79,9 +79,9 @@ impl SqliteStore {
     }
 
     fn lock_conn(&self) -> Result<std::sync::MutexGuard<'_, Connection>> {
-        self.conn.lock().map_err(|e| {
-            EchoAccessError::Storage(format!("sqlite connection mutex poisoned: {e}"))
-        })
+        self.conn
+            .lock()
+            .map_err(|e| EchoAccessError::Storage(format!("sqlite connection mutex poisoned: {e}")))
     }
 
     /// Insert or replace a sync version row.
@@ -144,7 +144,9 @@ impl SqliteStore {
     pub fn list_sync_versions(&self) -> Result<Vec<SyncVersionRecord>> {
         let conn = self.lock_conn()?;
         let mut stmt = conn
-            .prepare("SELECT file_path, version, hash, timestamp FROM sync_versions ORDER BY file_path")
+            .prepare(
+                "SELECT file_path, version, hash, timestamp FROM sync_versions ORDER BY file_path",
+            )
             .map_err(sqlite_err)?;
         let rows = stmt
             .query_map([], |r: &rusqlite::Row| {
@@ -201,8 +203,11 @@ impl SqliteStore {
 
     pub fn delete_device(&self, device_id: &str) -> Result<()> {
         let conn = self.lock_conn()?;
-        conn.execute("DELETE FROM devices WHERE device_id = ?1", params![device_id])
-            .map_err(sqlite_err)?;
+        conn.execute(
+            "DELETE FROM devices WHERE device_id = ?1",
+            params![device_id],
+        )
+        .map_err(sqlite_err)?;
         Ok(())
     }
 
@@ -254,18 +259,14 @@ mod tests {
     #[test]
     fn sync_version_crud() {
         let store = SqliteStore::open_in_memory().unwrap();
-        store
-            .upsert_sync_version("a/b.txt", 1, "h1", "t1")
-            .unwrap();
+        store.upsert_sync_version("a/b.txt", 1, "h1", "t1").unwrap();
         let row = store.get_sync_version("a/b.txt").unwrap().unwrap();
         assert_eq!(row.file_path, "a/b.txt");
         assert_eq!(row.version, 1);
         assert_eq!(row.hash, "h1");
         assert_eq!(row.timestamp, "t1");
 
-        store
-            .upsert_sync_version("a/b.txt", 2, "h2", "t2")
-            .unwrap();
+        store.upsert_sync_version("a/b.txt", 2, "h2", "t2").unwrap();
         let row2 = store.get_sync_version("a/b.txt").unwrap().unwrap();
         assert_eq!(row2.version, 2);
 

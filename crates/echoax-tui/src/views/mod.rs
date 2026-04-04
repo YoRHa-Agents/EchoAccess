@@ -1,3 +1,3 @@
 pub mod dashboard;
-pub mod sync_view;
 pub mod profiles;
+pub mod sync_view;

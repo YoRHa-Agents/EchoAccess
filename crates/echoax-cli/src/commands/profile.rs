@@ -27,8 +27,7 @@ pub async fn execute(cmd: ProfileCommands) -> echoax_core::Result<()> {
             Ok(())
         }
         ProfileCommands::Validate { path } => {
-            let profile =
-                echoax_core::profile::load_profile(std::path::Path::new(&path))?;
+            let profile = echoax_core::profile::load_profile(std::path::Path::new(&path))?;
             println!(
                 "Profile '{}' is valid ({} sync rules)",
                 profile.device.hostname,

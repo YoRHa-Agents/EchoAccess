@@ -24,11 +24,7 @@ pub fn export_archive(
 
     let profiles: Vec<_> = std::fs::read_dir(config_dir)?
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .is_some_and(|ext| ext == "toml")
-        })
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "toml"))
         .collect();
 
     let mut archive_data = Vec::new();

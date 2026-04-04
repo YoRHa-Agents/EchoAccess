@@ -8,10 +8,7 @@ pub struct PushEntry {
     pub encrypted: bool,
 }
 
-pub async fn push_to_device(
-    _host: &str,
-    _files: &[PushEntry],
-) -> Result<()> {
+pub async fn push_to_device(_host: &str, _files: &[PushEntry]) -> Result<()> {
     // TODO: implement actual SSH push via openssh crate
     Err(EchoAccessError::Network(
         "Device push not yet implemented".into(),
