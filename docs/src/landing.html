@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EchoAccess — Cross-Platform Config Sync</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap');
+
+  :root {
+    --bg-deep: #2E2A27;
+    --bg-panel: #4B413D;
+    --bg-surface: #594E4A;
+    --fg-primary: #C3BDA8;
+    --fg-secondary: #B0AB98;
+    --accent: #C87941;
+    --highlight: #D4C9B0;
+    --accent-rare: #A8B5A0;
+    --grid: #3A3632;
+    --border: #8B8070;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--fg-primary);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 6rem 2rem 4rem;
+    border-bottom: 1px solid var(--grid);
+    position: relative;
+  }
+
+  .hero h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 4rem;
+    color: var(--highlight);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero .rule {
+    width: 120px;
+    height: 2px;
+    background: var(--accent);
+    margin: 1rem auto;
+  }
+
+  .hero p {
+    font-size: 1.25rem;
+    color: var(--fg-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+  }
+
+  .card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    transition: background 0.2s;
+  }
+  .card:hover {
+    background: var(--bg-surface);
+  }
+  .card h3 {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .card p {
+    color: var(--fg-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .screenshot {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+  }
+  .screenshot img {
+    max-width: 640px;
+    width: 100%;
+    border: 1px solid var(--border);
+  }
+  .screenshot .caption {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--fg-secondary);
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .cta {
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+  .cta a {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--accent);
+    color: var(--bg-deep);
+    padding: 0.75rem 2rem;
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    font-size: 1rem;
+    margin: 0.5rem;
+    transition: background 0.2s;
+  }
+  .cta a:hover {
+    background: var(--highlight);
+  }
+  .cta a.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--fg-primary);
+  }
+  .cta a.secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--fg-secondary);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--grid);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<section class="hero">
+  <h1>ECHOACCESS</h1>
+  <div class="rule"></div>
+  <p>Cross-platform configuration file synchronization with field-level encryption, 3-way merge, and approval workflows.</p>
+</section>
+
+<section class="features">
+  <div class="card">
+    <h3>[ PROFILE SYNC ]</h3>
+    <p>Per-device TOML profiles with field-level overrides, transforms, and masking rules. Sync SSH configs, dotfiles, and app settings.</p>
+  </div>
+  <div class="card">
+    <h3>[ DUAL ENCRYPTION ]</h3>
+    <p>age whole-file encryption for sensitive keys. AES-256-GCM field-level encryption for structured configs. argon2 key derivation.</p>
+  </div>
+  <div class="card">
+    <h3>[ 3-WAY MERGE ]</h3>
+    <p>Automatic conflict detection with approval queues. No changes pushed without your consent. Full merge history preserved.</p>
+  </div>
+  <div class="card">
+    <h3>[ TRIPLE INTERFACE ]</h3>
+    <p>CLI for scripts and automation. NieR-styled TUI for interactive management. REST API for integration and remote access.</p>
+  </div>
+  <div class="card">
+    <h3>[ CLOUD STORAGE ]</h3>
+    <p>Pluggable CloudBackend trait. S3-compatible out of the box — works with Aliyun OSS, AWS S3, MinIO, Cloudflare R2.</p>
+  </div>
+  <div class="card">
+    <h3>[ SSH DEVICE PUSH ]</h3>
+    <p>Discover devices from ~/.ssh/config. Push encrypted configs to remote hosts. Bootstrap new devices in one command.</p>
+  </div>
+</section>
+
+<section class="screenshot">
+  <img src="assets/tui-dashboard.png" alt="EchoAccess TUI Dashboard">
+  <div class="caption">// TERMINAL INTERFACE — NIER: AUTOMATA VISUAL LANGUAGE</div>
+</section>
+
+<section class="cta">
+  <a href="https://github.com/nicholasjng/EchoAccess/releases/latest">DOWNLOAD v0.1.0</a>
+  <a href="introduction.html" class="secondary">USER GUIDE</a>
+  <a href="https://github.com/nicholasjng/EchoAccess" class="secondary">GITHUB</a>
+</section>
+
+<footer>
+  EchoAccess v0.1.0 — Built with Rust<br>
+  <a href="https://github.com/nicholasjng/EchoAccess">github.com/nicholasjng/EchoAccess</a>
+</footer>
+</body>
+</html>
