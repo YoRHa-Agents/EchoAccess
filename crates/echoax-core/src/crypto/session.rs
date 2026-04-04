@@ -54,9 +54,9 @@ impl SessionManager {
     }
 
     pub fn get_key(&self) -> Result<&[u8; 32]> {
-        self.master_key.as_ref().ok_or_else(|| {
-            crate::error::EchoAccessError::Crypto("Session is locked".into())
-        })
+        self.master_key
+            .as_ref()
+            .ok_or_else(|| crate::error::EchoAccessError::Crypto("Session is locked".into()))
     }
 }
 
@@ -78,8 +78,8 @@ impl Drop for SessionManager {
 mod tests {
     use super::*;
     use crate::ui::adapter::{
-        AppState, ConflictInfo, DiffView, MockAdapter, Notification, PendingAction,
-        Resolution, UIAdapter,
+        AppState, ConflictInfo, DiffView, MockAdapter, Notification, PendingAction, Resolution,
+        UIAdapter,
     };
 
     #[test]

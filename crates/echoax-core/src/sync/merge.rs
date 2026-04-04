@@ -25,9 +25,7 @@ pub fn three_way_merge(base: &str, ours: &str, theirs: &str) -> Result<MergeResu
         Ok(with_ours) => match diffy::apply(&with_ours, &patch_theirs) {
             Ok(merged) => Ok(MergeResult::Clean(merged)),
             Err(_) => {
-                let markers = format!(
-                    "<<<<<<< OURS\n{ours}\n=======\n{theirs}\n>>>>>>> THEIRS"
-                );
+                let markers = format!("<<<<<<< OURS\n{ours}\n=======\n{theirs}\n>>>>>>> THEIRS");
                 Ok(MergeResult::Conflict {
                     merged_with_markers: markers,
                     conflict_count: 1,

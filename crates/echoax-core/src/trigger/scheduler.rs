@@ -7,7 +7,10 @@ pub struct SchedulerTrigger {
 
 impl SchedulerTrigger {
     pub fn new(interval_secs: u64) -> Self {
-        Self { interval_secs, running: false }
+        Self {
+            interval_secs,
+            running: false,
+        }
     }
 
     pub fn interval_secs(&self) -> u64 {
@@ -20,7 +23,10 @@ impl SchedulerTrigger {
 
     pub async fn start(&mut self) -> Result<()> {
         self.running = true;
-        tracing::info!("Scheduler started with {}s interval (stub)", self.interval_secs);
+        tracing::info!(
+            "Scheduler started with {}s interval (stub)",
+            self.interval_secs
+        );
         Ok(())
     }
 

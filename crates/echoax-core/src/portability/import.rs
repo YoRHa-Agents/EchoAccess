@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use crate::error::Result;
 use super::export::ExportManifest;
+use crate::error::Result;
 
 pub fn import_archive(
     archive_path: &Path,

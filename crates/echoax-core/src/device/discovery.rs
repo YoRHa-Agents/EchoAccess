@@ -12,9 +12,8 @@ pub struct DiscoveredHost {
 }
 
 pub fn discover_ssh_hosts(ssh_config_path: &Path) -> Result<Vec<DiscoveredHost>> {
-    let content = std::fs::read_to_string(ssh_config_path).map_err(|e| {
-        EchoAccessError::Network(format!("Cannot read SSH config: {e}"))
-    })?;
+    let content = std::fs::read_to_string(ssh_config_path)
+        .map_err(|e| EchoAccessError::Network(format!("Cannot read SSH config: {e}")))?;
     parse_ssh_config(&content)
 }
 

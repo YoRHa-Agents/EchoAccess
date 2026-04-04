@@ -25,9 +25,8 @@ pub fn apply_permission(path: &Path, policy: PermissionPolicy) -> Result<()> {
 /// Returns `Ok(true)` if the permission bits of `path` match `policy` (masked with `0o777`).
 pub fn verify_permission(path: &Path, policy: PermissionPolicy) -> Result<bool> {
     let expected = mode_for_policy(policy);
-    let meta = std::fs::metadata(path).map_err(|e| {
-        EchoAccessError::Permission(format!("metadata {}: {e}", path.display()))
-    })?;
+    let meta = std::fs::metadata(path)
+        .map_err(|e| EchoAccessError::Permission(format!("metadata {}: {e}", path.display())))?;
     let actual = meta.permissions().mode() & 0o777;
     Ok(actual == expected)
 }

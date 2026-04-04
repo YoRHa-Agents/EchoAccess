@@ -1,6 +1,6 @@
+use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders, List, ListItem};
 use ratatui::Frame;
-use ratatui::layout::Rect;
 
 use crate::theme::nier::NierTheme;
 
@@ -10,7 +10,12 @@ pub fn render(frame: &mut Frame, area: Rect) {
         ListItem::new("  git/gitconfig.toml   ─── pending ──── now"),
     ];
     let list = List::new(items)
-        .block(Block::default().title(" Sync Status ").borders(Borders::ALL).style(NierTheme::border()))
+        .block(
+            Block::default()
+                .title(" Sync Status ")
+                .borders(Borders::ALL)
+                .style(NierTheme::border()),
+        )
         .style(NierTheme::base());
     frame.render_widget(list, area);
 }
