@@ -26,21 +26,26 @@ jobs:
           chmod +x mdbook
           sudo mv mdbook /usr/local/bin/
 
-      - name: Build documentation
+      - name: Build user guide
         run: |
           cd docs
           mdbook build
-          cp -r ../assets book/assets 2>/dev/null || true
 
-      - name: Copy landing page
+      - name: Assemble site
         run: |
-          cp docs/src/landing.html docs/book/index.html 2>/dev/null || true
-          mv docs/book/index.html docs/book/landing.html 2>/dev/null || true
+          mkdir -p site
+          # Landing page as root index
+          cp docs/src/landing.html site/index.html
+          # User guide under /guide/
+          cp -r docs/book site/guide
+          # Assets for landing page
+          mkdir -p site/assets
+          cp assets/*.png site/assets/ 2>/dev/null || true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/book
+          path: site
 
   deploy:
     needs: build
