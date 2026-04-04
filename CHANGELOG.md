@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.2 — Unified Binary (2026-04-04)
+
+Bugfix: validate dashboard route before opening browser to an existing instance.
+
+### Bugfix
+
+- **Stale process detection**: The "already running" health check now verifies version match AND dashboard availability, preventing 404 when a stale or incompatible process occupies the port
+
+---
+
 ## v0.1.1 — Unified Binary (2026-04-04)
 
 Consolidates all interfaces into a single `echo_access` binary based on v0.1.0 release feedback.
