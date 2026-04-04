@@ -84,27 +84,22 @@ cargo build --release --workspace
 ## Quick Start
 
 ```bash
-# Initialize EchoAccess on this device
-echoax-cli init
+# Launch Web UI (default — opens browser automatically)
+echo_access
 
-# Check sync status
-echoax-cli status
+# Or explicitly
+echo_access web --port 9876
 
-# Validate a device profile
-echoax-cli profile validate profiles/my-device.toml
+# CLI commands
+echo_access init
+echo_access status
+echo_access profile validate profiles/my-device.toml
+echo_access sync upload
+echo_access sync download
+echo_access config path
 
-# View configuration path
-echoax-cli config path
-
-# Sync files
-echoax-cli sync upload
-echoax-cli sync download
-
-# Start the TUI dashboard
-echoax-tui
-
-# Start the Web API
-echoax-web  # http://127.0.0.1:9876
+# TUI mode
+echo_access tui
 ```
 
 ---

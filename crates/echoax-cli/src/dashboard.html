@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EchoAccess</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap');
+  :root {
+    --bg:#2E2A27;--panel:#4B413D;--surface:#594E4A;
+    --fg:#C3BDA8;--fg2:#B0AB98;--accent:#C87941;
+    --hi:#D4C9B0;--ok:#A8B5A0;--grid:#3A3632;--border:#8B8070;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:'Rajdhani',sans-serif;min-height:100vh}
+  .scan{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:100}
+  header{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace}
+  header .logo{color:var(--hi);letter-spacing:.2em;font-size:1.1rem}
+  header .ver{color:var(--fg2);font-size:.8rem}
+  .status-bar{display:flex;gap:2rem;padding:.75rem 2rem;background:var(--panel);border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace;font-size:.85rem}
+  .status-bar .item{display:flex;gap:.5rem;align-items:center}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot.green{background:var(--ok)}.dot.red{background:var(--accent)}.dot.gray{background:var(--fg2)}
+  main{max-width:900px;margin:2rem auto;padding:0 2rem}
+  h2{font-family:'Share Tech Mono',monospace;color:var(--hi);font-size:1rem;letter-spacing:.1em;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--grid)}
+  .file-list{border:1px solid var(--border)}
+  .file-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace;font-size:.85rem;transition:background .2s}
+  .file-row:hover{background:var(--panel)}
+  .file-row:last-child{border-bottom:none}
+  .file-path{color:var(--fg)}
+  .badge{padding:.15rem .5rem;font-size:.75rem;letter-spacing:.05em}
+  .badge.synced{background:rgba(168,181,160,.15);color:var(--ok)}
+  .badge.conflict{background:rgba(200,121,65,.15);color:var(--accent);font-weight:bold}
+  .badge.pending{background:rgba(176,171,152,.1);color:var(--fg2)}
+  .file-time{color:var(--fg2);font-size:.75rem}
+  .actions{display:flex;gap:.75rem;margin:1.5rem 0}
+  .btn{font-family:'Share Tech Mono',monospace;padding:.5rem 1.5rem;font-size:.85rem;letter-spacing:.08em;border:none;cursor:pointer;transition:all .2s}
+  .btn-primary{background:var(--accent);color:var(--bg)}.btn-primary:hover{background:var(--hi)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--fg)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--grid);border:1px solid var(--border);margin:1rem 0}
+  .info-cell{background:var(--bg);padding:1rem;font-family:'Share Tech Mono',monospace}
+  .info-cell .label{color:var(--fg2);font-size:.75rem;letter-spacing:.1em;margin-bottom:.3rem}
+  .info-cell .value{color:var(--hi);font-size:1.1rem}
+  .log{background:#1a1816;border:1px solid var(--border);padding:1rem;font-family:'Share Tech Mono',monospace;font-size:.8rem;line-height:1.7;max-height:200px;overflow-y:auto;color:var(--fg2)}
+  .log .ts{color:var(--fg2)}.log .ok{color:var(--ok)}.log .warn{color:var(--accent)}
+  footer{text-align:center;padding:2rem;color:var(--fg2);font-size:.75rem;font-family:'Share Tech Mono',monospace;border-top:1px solid var(--grid);margin-top:3rem}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<header><span class="logo">ECHOACCESS</span><span class="ver" id="version">v0.1.0</span></header>
+<div class="status-bar">
+  <div class="item"><div class="dot" id="session-dot"></div><span id="session-text">Session: ...</span></div>
+  <div class="item"><div class="dot" id="cloud-dot"></div><span id="cloud-text">Cloud: ...</span></div>
+  <div class="item"><div class="dot green"></div><span>Server: Running</span></div>
+</div>
+<main>
+  <h2>// SYNC STATUS</h2>
+  <div class="file-list">
+    <div class="file-row"><span class="file-path">ssh/config.base</span><span class="badge synced">synced</span><span class="file-time">2m ago</span></div>
+    <div class="file-row"><span class="file-path">ssh/id_ed25519</span><span class="badge synced">synced</span><span class="file-time">2m ago</span></div>
+    <div class="file-row"><span class="file-path">git/gitconfig.toml</span><span class="badge conflict">CONFLICT</span><span class="file-time">5m ago</span></div>
+    <div class="file-row"><span class="file-path">shell/aliases.sh</span><span class="badge pending">pending</span><span class="file-time">now</span></div>
+    <div class="file-row"><span class="file-path">vim/init.lua</span><span class="badge synced">synced</span><span class="file-time">1h ago</span></div>
+    <div class="file-row"><span class="file-path">tmux/tmux.conf</span><span class="badge synced">synced</span><span class="file-time">1h ago</span></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" onclick="syncUpload()">UPLOAD</button>
+    <button class="btn btn-outline" onclick="syncDownload()">DOWNLOAD</button>
+    <button class="btn btn-outline" onclick="refresh()">REFRESH</button>
+  </div>
+
+  <h2>// OVERVIEW</h2>
+  <div class="info-grid">
+    <div class="info-cell"><div class="label">PROFILES</div><div class="value" id="profiles">0</div></div>
+    <div class="info-cell"><div class="label">SYNCED FILES</div><div class="value" id="synced">4</div></div>
+    <div class="info-cell"><div class="label">CONFLICTS</div><div class="value" id="conflicts">1</div></div>
+    <div class="info-cell"><div class="label">PENDING</div><div class="value" id="pending-count">1</div></div>
+  </div>
+
+  <h2>// ACTIVITY LOG</h2>
+  <div class="log" id="log">
+    <div><span class="ts">[--:--:--]</span> <span class="ok">Server started</span></div>
+  </div>
+</main>
+<footer>ECHOACCESS // 127.0.0.1:9876 // <a href="https://github.com/shendeguize/EchoAccess" style="color:var(--accent);text-decoration:none">GITHUB</a></footer>
+<script>
+function log(msg, cls) {
+  cls = cls || '';
+  var el = document.getElementById('log');
+  var t = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  el.innerHTML += '<div><span class="ts">['+t+']</span> <span class="'+cls+'">'+msg+'</span></div>';
+  el.scrollTop = el.scrollHeight;
+}
+function refresh() {
+  log('Refreshing status...');
+  fetch('/api/status').then(function(r){return r.json()}).then(function(d){
+    document.getElementById('session-text').textContent = 'Session: ' + d.session;
+    document.getElementById('cloud-text').textContent = 'Cloud: ' + d.cloud;
+    document.getElementById('session-dot').className = 'dot ' + (d.session==='unlocked'?'green':'red');
+    document.getElementById('cloud-dot').className = 'dot ' + (d.cloud==='connected'?'green':'gray');
+    document.getElementById('pending-count').textContent = d.pending_approvals;
+    log('Status updated', 'ok');
+  }).catch(function(e){ log('Failed: '+e, 'warn'); });
+}
+function syncUpload() { log('Sync upload triggered...', 'ok'); }
+function syncDownload() { log('Sync download triggered...', 'ok'); }
+refresh();
+fetch('/api/health').then(function(r){return r.json()}).then(function(h){
+  if(h.version) document.getElementById('version').textContent = 'v'+h.version;
+}).catch(function(){});
+</script>
+</body>
+</html>

@@ -17,29 +17,15 @@ for target in "${TARGETS[@]}"; do
     echo ""
     echo "=== Building for ${target} ==="
 
-    if rustup target list --installed | grep -q "^${target}$"; then
-        cargo build --release --workspace --target "${target}" || {
-            echo "WARN: Native build failed for ${target}, trying cross..."
-            cross build --release --workspace --target "${target}" || {
-                echo "SKIP: Cannot build for ${target}"
-                continue
-            }
-        }
-    else
-        echo "Target ${target} not installed, trying cross..."
-        cross build --release --workspace --target "${target}" || {
-            echo "SKIP: Cannot build for ${target}"
-            continue
-        }
-    fi
+    cargo zigbuild --release -p echoax-cli --target "${target}" || {
+        echo "SKIP: Cannot build for ${target}"
+        continue
+    }
 
     archive="echoax-v${VERSION}-${target}"
     mkdir -p "dist/${archive}"
 
-    for bin in echoax-cli echoax-tui echoax-web; do
-        cp "target/${target}/release/${bin}" "dist/${archive}/" 2>/dev/null || true
-    done
-
+    cp "target/${target}/release/echo_access" "dist/${archive}/" 2>/dev/null || true
     cp README.md LICENSE "dist/${archive}/"
 
     (cd dist && tar czf "${archive}.tar.gz" "${archive}")
