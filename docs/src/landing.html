@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EchoAccess — Cross-Platform Config Sync</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap');
 
   :root {
     --bg-deep: #2E2A27;
@@ -33,185 +33,488 @@
   .scanlines {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.03) 2px,
-      rgba(0,0,0,0.03) 4px
-    );
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
     pointer-events: none;
     z-index: 100;
   }
 
+  /* NAV */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--grid);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+  }
+  nav .logo { color: var(--highlight); letter-spacing: 0.2em; font-size: 1rem; }
+  nav a { color: var(--fg-secondary); text-decoration: none; margin-left: 2rem; transition: color 0.2s; }
+  nav a:hover { color: var(--accent); }
+
+  /* HERO */
   .hero {
     text-align: center;
-    padding: 6rem 2rem 4rem;
-    border-bottom: 1px solid var(--grid);
+    padding: 5rem 2rem 3rem;
     position: relative;
   }
-
   .hero h1 {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 4rem;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
     color: var(--highlight);
     letter-spacing: 0.15em;
     margin-bottom: 0.5rem;
   }
+  .hero .rule { width: 100px; height: 2px; background: var(--accent); margin: 1rem auto; }
+  .hero p { font-size: 1.2rem; color: var(--fg-secondary); max-width: 600px; margin: 0 auto 2rem; line-height: 1.6; }
+  .hero .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+  .hero .badges img { height: 22px; }
 
-  .hero .rule {
-    width: 120px;
-    height: 2px;
-    background: var(--accent);
-    margin: 1rem auto;
-  }
-
-  .hero p {
-    font-size: 1.25rem;
-    color: var(--fg-secondary);
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
+  /* FEATURES */
   .features {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    max-width: 1000px;
-    margin: 3rem auto;
-    padding: 0 2rem;
+    gap: 1px;
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--grid);
+    border: 1px solid var(--grid);
   }
-
   .card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    transition: background 0.2s;
+    background: var(--bg-deep);
+    padding: 2rem;
+    transition: background 0.3s;
   }
-  .card:hover {
-    background: var(--bg-surface);
-  }
+  .card:hover { background: var(--bg-panel); }
   .card h3 {
     font-family: 'Share Tech Mono', monospace;
     color: var(--accent);
-    font-size: 1rem;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.75rem;
   }
-  .card p {
-    color: var(--fg-secondary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
+  .card p { color: var(--fg-secondary); font-size: 0.95rem; line-height: 1.6; }
 
-  .screenshot {
+  /* TERMINAL DEMO */
+  .demo-section {
+    max-width: 800px;
+    margin: 4rem auto;
+    padding: 0 2rem;
+  }
+  .demo-section h2 {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--highlight);
+    letter-spacing: 0.1em;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
     text-align: center;
-    padding: 3rem 2rem;
-    border-top: 1px solid var(--grid);
+  }
+  .terminal {
+    background: #1a1816;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .terminal-bar {
+    background: var(--bg-panel);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     border-bottom: 1px solid var(--grid);
   }
-  .screenshot img {
-    max-width: 640px;
-    width: 100%;
-    border: 1px solid var(--border);
-  }
-  .screenshot .caption {
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot.r { background: #C87941; }
+  .terminal-dot.y { background: #B0AB98; }
+  .terminal-dot.g { background: #A8B5A0; }
+  .terminal-title { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--fg-secondary); margin-left: auto; }
+  .terminal-body {
+    padding: 1.25rem;
     font-family: 'Share Tech Mono', monospace;
-    color: var(--fg-secondary);
     font-size: 0.85rem;
-    margin-top: 1rem;
-    letter-spacing: 0.05em;
+    line-height: 1.7;
+    min-height: 320px;
+    position: relative;
   }
+  .terminal-body .prompt { color: var(--accent); }
+  .terminal-body .cmd { color: var(--highlight); }
+  .terminal-body .output { color: var(--fg-secondary); }
+  .terminal-body .success { color: var(--accent-rare); }
+  .terminal-body .warn { color: var(--accent); }
+  .terminal-body .cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
 
+  .demo-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+  }
+  .demo-tab {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 1.5rem;
+    background: var(--bg-panel);
+    color: var(--fg-secondary);
+    border: 1px solid var(--grid);
+    border-bottom: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .demo-tab.active { background: #1a1816; color: var(--accent); border-color: var(--border); }
+  .demo-tab:hover:not(.active) { color: var(--fg-primary); }
+  .demo-content { display: none; }
+  .demo-content.active { display: block; }
+
+  /* TUI PREVIEW */
+  .tui-frame {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    padding: 0;
+    overflow: hidden;
+  }
+  .tui-header {
+    background: var(--bg-surface);
+    color: var(--highlight);
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+  .tui-body { padding: 0.75rem 1rem; }
+  .tui-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--grid);
+  }
+  .tui-row .path { color: var(--fg-primary); }
+  .tui-row .status-synced { color: var(--accent-rare); }
+  .tui-row .status-conflict { color: var(--accent); font-weight: bold; }
+  .tui-row .status-pending { color: var(--fg-secondary); }
+  .tui-row .time { color: var(--fg-secondary); font-size: 0.75rem; }
+  .tui-footer {
+    background: var(--bg-panel);
+    color: var(--fg-secondary);
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+  .tui-footer span { margin-right: 1.5rem; }
+  .tui-key { color: var(--highlight); }
+
+  /* ARCHITECTURE */
+  .arch-section {
+    max-width: 700px;
+    margin: 4rem auto;
+    padding: 0 2rem;
+    text-align: center;
+  }
+  .arch-section h2 {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--highlight);
+    letter-spacing: 0.1em;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--grid);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .arch-cell {
+    background: var(--bg-deep);
+    padding: 1rem 0.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+  }
+  .arch-cell.header { background: var(--bg-panel); color: var(--accent); font-size: 0.7rem; letter-spacing: 0.1em; }
+  .arch-cell .name { color: var(--highlight); font-size: 0.85rem; }
+  .arch-cell .desc { color: var(--fg-secondary); margin-top: 0.3rem; }
+
+  /* CTA */
   .cta {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 4rem 2rem;
+    border-top: 1px solid var(--grid);
+  }
+  .cta h2 {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--highlight);
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
   }
   .cta a {
     display: inline-block;
     font-family: 'Share Tech Mono', monospace;
-    background: var(--accent);
-    color: var(--bg-deep);
     padding: 0.75rem 2rem;
     text-decoration: none;
     letter-spacing: 0.1em;
-    font-size: 1rem;
-    margin: 0.5rem;
-    transition: background 0.2s;
+    font-size: 0.9rem;
+    margin: 0.4rem;
+    transition: all 0.2s;
   }
-  .cta a:hover {
-    background: var(--highlight);
-  }
-  .cta a.secondary {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--fg-primary);
-  }
-  .cta a.secondary:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+  .btn-primary { background: var(--accent); color: var(--bg-deep); }
+  .btn-primary:hover { background: var(--highlight); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--fg-primary); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* FOOTER */
   footer {
     text-align: center;
     padding: 2rem;
     color: var(--fg-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     border-top: 1px solid var(--grid);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.05em;
   }
   footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .arch-grid { grid-template-columns: repeat(2, 1fr); }
+    .features { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 <div class="scanlines"></div>
 
+<nav>
+  <span class="logo">ECHOACCESS</span>
+  <div>
+    <a href="#features">FEATURES</a>
+    <a href="#demo">DEMO</a>
+    <a href="guide/introduction.html">GUIDE</a>
+    <a href="https://github.com/shendeguize/EchoAccess">GITHUB</a>
+  </div>
+</nav>
+
 <section class="hero">
   <h1>ECHOACCESS</h1>
   <div class="rule"></div>
-  <p>Cross-platform configuration file synchronization with field-level encryption, 3-way merge, and approval workflows.</p>
+  <p>Cross-platform configuration file synchronization with field-level encryption, 3-way merge, and approval workflows. Built in Rust.</p>
+  <div class="badges">
+    <img src="https://img.shields.io/badge/rust-1.94+-B0AB98?style=flat-square&logo=rust" alt="Rust">
+    <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macos-8B8070?style=flat-square" alt="Platforms">
+    <img src="https://img.shields.io/badge/version-0.1.0-C3BDA8?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/license-MIT-C87941?style=flat-square" alt="License">
+  </div>
 </section>
 
-<section class="features">
+<section id="features" class="features">
   <div class="card">
     <h3>[ PROFILE SYNC ]</h3>
-    <p>Per-device TOML profiles with field-level overrides, transforms, and masking rules. Sync SSH configs, dotfiles, and app settings.</p>
+    <p>Per-device TOML profiles with field-level overrides, transforms, and masking. Sync SSH configs, dotfiles, and application settings across devices.</p>
   </div>
   <div class="card">
     <h3>[ DUAL ENCRYPTION ]</h3>
-    <p>age whole-file encryption for sensitive keys. AES-256-GCM field-level encryption for structured configs. argon2 key derivation.</p>
+    <p>age whole-file encryption for SSH keys. AES-256-GCM field-level encryption for structured configs. argon2id key derivation. Zero plaintext on disk.</p>
   </div>
   <div class="card">
     <h3>[ 3-WAY MERGE ]</h3>
-    <p>Automatic conflict detection with approval queues. No changes pushed without your consent. Full merge history preserved.</p>
+    <p>Automatic conflict detection with diffy. Approval queue for safe uploads. No changes pushed without your explicit consent.</p>
   </div>
   <div class="card">
     <h3>[ TRIPLE INTERFACE ]</h3>
-    <p>CLI for scripts and automation. NieR-styled TUI for interactive management. REST API for integration and remote access.</p>
+    <p>CLI for automation. NieR:Automata-styled TUI for interactive use. REST API for remote management. All share one core library.</p>
   </div>
   <div class="card">
-    <h3>[ CLOUD STORAGE ]</h3>
-    <p>Pluggable CloudBackend trait. S3-compatible out of the box — works with Aliyun OSS, AWS S3, MinIO, Cloudflare R2.</p>
+    <h3>[ PLUGGABLE STORAGE ]</h3>
+    <p>CloudBackend trait supports S3-compatible (Aliyun OSS, AWS, MinIO), Git, and custom backends. SQLite for local metadata.</p>
   </div>
   <div class="card">
     <h3>[ SSH DEVICE PUSH ]</h3>
-    <p>Discover devices from ~/.ssh/config. Push encrypted configs to remote hosts. Bootstrap new devices in one command.</p>
+    <p>Discover devices from ~/.ssh/config. Push encrypted configs via SSH. Bootstrap new devices with one command.</p>
   </div>
 </section>
 
-<section class="screenshot">
-  <img src="assets/tui-dashboard.png" alt="EchoAccess TUI Dashboard">
-  <div class="caption">// TERMINAL INTERFACE — NIER: AUTOMATA VISUAL LANGUAGE</div>
+<section id="demo" class="demo-section">
+  <h2>// INTERACTIVE DEMO</h2>
+
+  <div class="demo-tabs">
+    <div class="demo-tab active" onclick="switchDemo('cli')">CLI</div>
+    <div class="demo-tab" onclick="switchDemo('tui')">TUI</div>
+    <div class="demo-tab" onclick="switchDemo('api')">WEB API</div>
+  </div>
+
+  <div id="demo-cli" class="demo-content active">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot r"></div>
+        <div class="terminal-dot y"></div>
+        <div class="terminal-dot g"></div>
+        <div class="terminal-title">echoax-cli</div>
+      </div>
+      <div class="terminal-body" id="cli-output"></div>
+    </div>
+  </div>
+
+  <div id="demo-tui" class="demo-content">
+    <div class="tui-frame">
+      <div class="tui-header">
+        <span>EchoAccess v0.1.0</span>
+        <span>Session: <span style="color:var(--accent-rare)">Unlocked</span> | Cloud: <span style="color:var(--accent-rare)">Connected</span></span>
+      </div>
+      <div class="tui-body">
+        <div class="tui-row"><span class="path">ssh/config.base</span><span class="status-synced">synced</span><span class="time">2m ago</span></div>
+        <div class="tui-row"><span class="path">ssh/id_ed25519</span><span class="status-synced">synced</span><span class="time">2m ago</span></div>
+        <div class="tui-row"><span class="path">git/gitconfig.toml</span><span class="status-conflict">CONFLICT</span><span class="time">5m ago</span></div>
+        <div class="tui-row"><span class="path">shell/aliases.sh</span><span class="status-pending">pending approval</span><span class="time">now</span></div>
+        <div class="tui-row"><span class="path">vim/init.lua</span><span class="status-synced">synced</span><span class="time">1h ago</span></div>
+        <div class="tui-row"><span class="path">tmux/tmux.conf</span><span class="status-synced">synced</span><span class="time">1h ago</span></div>
+      </div>
+      <div class="tui-footer">
+        <span><span class="tui-key">[u]</span> Upload</span>
+        <span><span class="tui-key">[d]</span> Download</span>
+        <span><span class="tui-key">[r]</span> Refresh</span>
+        <span><span class="tui-key">[a]</span> Approve</span>
+        <span><span class="tui-key">[c]</span> Conflicts</span>
+        <span><span class="tui-key">[q]</span> Quit</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="demo-api" class="demo-content">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot r"></div>
+        <div class="terminal-dot y"></div>
+        <div class="terminal-dot g"></div>
+        <div class="terminal-title">curl — echoax-web :9876</div>
+      </div>
+      <div class="terminal-body" id="api-output"></div>
+    </div>
+  </div>
+</section>
+
+<section class="arch-section">
+  <h2>// ARCHITECTURE</h2>
+  <div class="arch-grid">
+    <div class="arch-cell header">CLI</div>
+    <div class="arch-cell header">TUI</div>
+    <div class="arch-cell header">WEB API</div>
+    <div class="arch-cell header">CORE</div>
+    <div class="arch-cell"><div class="name">echoax-cli</div><div class="desc">clap subcommands</div></div>
+    <div class="arch-cell"><div class="name">echoax-tui</div><div class="desc">ratatui + NieR</div></div>
+    <div class="arch-cell"><div class="name">echoax-web</div><div class="desc">axum REST</div></div>
+    <div class="arch-cell"><div class="name">echoax-core</div><div class="desc">12 modules</div></div>
+  </div>
+  <div class="arch-grid" style="margin-top: 1px;">
+    <div class="arch-cell"><div class="desc">profile</div></div>
+    <div class="arch-cell"><div class="desc">storage</div></div>
+    <div class="arch-cell"><div class="desc">crypto</div></div>
+    <div class="arch-cell"><div class="desc">sync</div></div>
+    <div class="arch-cell"><div class="desc">permission</div></div>
+    <div class="arch-cell"><div class="desc">trigger</div></div>
+    <div class="arch-cell"><div class="desc">device</div></div>
+    <div class="arch-cell"><div class="desc">updater</div></div>
+  </div>
 </section>
 
 <section class="cta">
-  <a href="https://github.com/nicholasjng/EchoAccess/releases/latest">DOWNLOAD v0.1.0</a>
-  <a href="introduction.html" class="secondary">USER GUIDE</a>
-  <a href="https://github.com/nicholasjng/EchoAccess" class="secondary">GITHUB</a>
+  <h2>// GET STARTED</h2>
+  <a href="https://github.com/shendeguize/EchoAccess/releases/latest" class="btn-primary">DOWNLOAD v0.1.0</a>
+  <a href="guide/installation.html" class="btn-outline">INSTALL GUIDE</a>
+  <a href="https://github.com/shendeguize/EchoAccess" class="btn-outline">VIEW SOURCE</a>
 </section>
 
 <footer>
-  EchoAccess v0.1.0 — Built with Rust<br>
-  <a href="https://github.com/nicholasjng/EchoAccess">github.com/nicholasjng/EchoAccess</a>
+  ECHOACCESS v0.1.0 // BUILT WITH RUST // <a href="https://github.com/shendeguize/EchoAccess">GITHUB</a>
 </footer>
+
+<script>
+const cliLines = [
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli init' },{ type: 'br' },
+  { type: 'output', text: 'Initializing EchoAccess...' },{ type: 'br' },
+  { type: 'success', text: 'Created ~/.config/echoax/' },{ type: 'br' },
+  { type: 'success', text: 'Created ~/.config/echoax/profiles/' },{ type: 'br' },
+  { type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli status' },{ type: 'br' },
+  { type: 'output', text: 'EchoAccess v0.1.0' },{ type: 'br' },
+  { type: 'output', text: 'Session  : Locked' },{ type: 'br' },
+  { type: 'output', text: 'Cloud    : Disconnected' },{ type: 'br' },
+  { type: 'output', text: 'Profiles : 0 loaded' },{ type: 'br' },
+  { type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli profile validate my-server.toml' },{ type: 'br' },
+  { type: 'success', text: "Profile 'srv-01' is valid (3 sync rules)" },{ type: 'br' },
+  { type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'echoax-cli sync check' },{ type: 'br' },
+  { type: 'output', text: 'Checking sync status...' },{ type: 'br' },
+  { type: 'success', text: '  ssh/config.base     synced' },{ type: 'br' },
+  { type: 'warn',    text: '  git/gitconfig.toml  CONFLICT (local + remote changed)' },{ type: 'br' },
+  { type: 'output',  text: '  shell/aliases.sh    pending approval' },{ type: 'br' },
+  { type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cursor' },
+];
+
+const apiLines = [
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'curl -s http://127.0.0.1:9876/api/health | jq' },{ type: 'br' },
+  { type: 'output', text: '{' },{ type: 'br' },
+  { type: 'success', text: '  "status": "ok",' },{ type: 'br' },
+  { type: 'output', text: '  "version": "0.1.0"' },{ type: 'br' },
+  { type: 'output', text: '}' },{ type: 'br' },
+  { type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cmd', text: 'curl -s http://127.0.0.1:9876/api/status | jq' },{ type: 'br' },
+  { type: 'output', text: '{' },{ type: 'br' },
+  { type: 'output', text: '  "session": "locked",' },{ type: 'br' },
+  { type: 'output', text: '  "cloud": "disconnected",' },{ type: 'br' },
+  { type: 'output', text: '  "sync_status": "idle",' },{ type: 'br' },
+  { type: 'output', text: '  "pending_approvals": 0' },{ type: 'br' },
+  { type: 'output', text: '}' },{ type: 'br' },
+  { type: 'br' },
+  { type: 'prompt', text: '$ ' },{ type: 'cursor' },
+];
+
+function typeTerminal(containerId, lines, speed) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  let i = 0;
+  function next() {
+    if (i >= lines.length) return;
+    const line = lines[i++];
+    if (line.type === 'br') { el.appendChild(document.createElement('br')); next(); return; }
+    if (line.type === 'cursor') { const c = document.createElement('span'); c.className = 'cursor-blink'; el.appendChild(c); return; }
+    const span = document.createElement('span');
+    span.className = line.type;
+    el.appendChild(span);
+    let ci = 0;
+    const interval = line.type === 'cmd' ? speed : speed / 3;
+    function typeChar() {
+      if (ci < line.text.length) { span.textContent += line.text[ci++]; setTimeout(typeChar, interval); }
+      else { next(); }
+    }
+    typeChar();
+  }
+  next();
+}
+
+function switchDemo(tab) {
+  document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.demo-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchDemo('${tab}')"]`).classList.add('active');
+  document.getElementById('demo-' + tab).classList.add('active');
+  if (tab === 'cli') typeTerminal('cli-output', cliLines, 30);
+  if (tab === 'api') typeTerminal('api-output', apiLines, 25);
+}
+
+typeTerminal('cli-output', cliLines, 30);
+</script>
 </body>
 </html>

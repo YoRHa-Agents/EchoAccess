@@ -50,3 +50,5 @@ Thumbs.db
 
 # ── mdBook output ───────────────────────────────────────
 docs/book/
+site
+docs/book
