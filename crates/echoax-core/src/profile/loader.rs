@@ -73,7 +73,10 @@ user = "default"
         assert_eq!(profile.sync_rules[0].transforms, vec!["normalize"]);
         assert_eq!(profile.sync_rules[0].masked_fields, vec!["password"]);
         assert_eq!(
-            profile.sync_rules[0].field_overrides.get("user").map(String::as_str),
+            profile.sync_rules[0]
+                .field_overrides
+                .get("user")
+                .map(String::as_str),
             Some("default")
         );
     }

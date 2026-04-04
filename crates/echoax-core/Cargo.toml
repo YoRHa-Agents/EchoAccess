@@ -7,6 +7,10 @@ version.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+async-trait = "0.1"
+aws-config = "1"
+aws-sdk-s3 = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -14,13 +18,12 @@ toml = "0.8"
 tracing = "0.1"
 dirs = "6"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-async-trait = "0.1"
-rusqlite = { version = "0.32", features = ["bundled"] }
-aws-sdk-s3 = "1"
-aws-config = "1"
 age = { version = "0.11", features = ["cli-common"] }
 argon2 = "0.5"
 rand = "0.8"
+zeroize = "1.8"
+diffy = "0.4"
+aes-gcm = "0.10"
 self_update = { version = "0.43", features = ["rustls"] }
 semver = "1"
 

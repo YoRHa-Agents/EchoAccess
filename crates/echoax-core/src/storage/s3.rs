@@ -22,14 +22,7 @@ fn is_not_found<E>(err: &SdkError<E>) -> bool {
         || msg.contains("Not Found")
 }
 
-/// S3-compatible backend (Aliyun OSS, MinIO, AWS S3) using a custom endpoint URL.
-pub struct S3Backend {
-    client: Client,
-    bucket: String,
-}
-
 fn infer_signing_region(endpoint: &str) -> String {
-    // e.g. https://bucket.oss-cn-beijing.aliyuncs.com → cn-beijing
     if let Some(idx) = endpoint.find("oss-") {
         let after = &endpoint[idx + "oss-".len()..];
         if let Some(dot) = after.find('.') {
@@ -37,6 +30,12 @@ fn infer_signing_region(endpoint: &str) -> String {
         }
     }
     "us-east-1".to_string()
+}
+
+/// S3-compatible backend (Aliyun OSS, MinIO, AWS S3) using a custom endpoint URL.
+pub struct S3Backend {
+    client: Client,
+    bucket: String,
 }
 
 impl S3Backend {
@@ -202,7 +201,7 @@ mod tests {
     #[tokio::test]
     async fn cloud_backend_trait_is_object_safe() {
         let backend: Box<dyn CloudBackend> = Box::new(NoopBackend);
-        assert!(backend.exists("k").await.unwrap() == false);
+        assert!(!backend.exists("k").await.unwrap());
     }
 
     #[test]
@@ -215,5 +214,4 @@ mod tests {
         );
         assert_eq!(b.bucket(), "my-bucket");
     }
-
 }

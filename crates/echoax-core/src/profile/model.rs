@@ -67,7 +67,10 @@ masked_fields = ["Host desktop-*"]
         assert_eq!(profile.sync_rules.len(), 1);
         assert_eq!(profile.sync_rules[0].transforms, vec!["strip_gui"]);
         assert_eq!(
-            profile.sync_rules[0].field_overrides.get("user.email").map(String::as_str),
+            profile.sync_rules[0]
+                .field_overrides
+                .get("user.email")
+                .map(String::as_str),
             Some("ops@company.com")
         );
     }
