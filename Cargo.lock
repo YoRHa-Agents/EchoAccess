@@ -648,7 +648,7 @@ dependencies = [
 
 [[package]]
 name = "echoax-cli"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "axum",
  "clap",
@@ -670,7 +670,7 @@ dependencies = [
 
 [[package]]
 name = "echoax-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aes-gcm",
  "age",
@@ -693,7 +693,7 @@ dependencies = [
 
 [[package]]
 name = "echoax-tui"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "crossterm",
  "dirs",
