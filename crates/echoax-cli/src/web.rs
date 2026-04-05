@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
 use axum::extract::State;
 use axum::http::header;
@@ -11,8 +12,10 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tokio::sync::RwLock;
 
+use crate::commands::update::{download_and_install, fetch_update_info};
 use echoax_core::config::model::AppConfig;
 use echoax_core::crypto::SessionManager;
+use echoax_core::storage::{CloudBackend, S3Backend};
 use echoax_core::sync::{
     scan_directory, ApprovalQueue, ConflictStore, FileState, GroupStore, Resolution, SyncEngine,
     SyncGroup, SyncStatus,
@@ -33,6 +36,7 @@ pub struct AppState {
     pub port: u16,
     pub groups: RwLock<GroupStore>,
     pub conflicts: RwLock<ConflictStore>,
+    pub started_at: Instant,
 }
 
 async fn dashboard() -> Html<&'static str> {
@@ -555,6 +559,91 @@ async fn api_conflicts_resolve(
     }
 }
 
+async fn api_cloud_test(State(state): State<Arc<AppState>>) -> Json<Value> {
+    let (enabled, endpoint) = {
+        let config = state.config.read().await;
+        (config.cloud.enabled, config.cloud.endpoint.clone())
+    };
+
+    if !enabled {
+        return Json(json!({"success": false, "message": "Cloud sync is disabled"}));
+    }
+
+    if endpoint.is_empty() {
+        return Json(json!({"success": false, "message": "No cloud endpoint configured"}));
+    }
+
+    let backend = S3Backend::new(endpoint, String::new(), String::new());
+    match backend.list("").await {
+        Ok(_) => Json(json!({"success": true, "message": "Connection successful"})),
+        Err(e) => {
+            Json(json!({"success": false, "message": format!("Backend not yet integrated: {e}")}))
+        }
+    }
+}
+
+async fn api_server_info(State(state): State<Arc<AppState>>) -> Json<Value> {
+    let uptime_secs = state.started_at.elapsed().as_secs();
+    Json(json!({
+        "config_path": state.config_path.to_string_lossy(),
+        "port": state.port,
+        "version": env!("CARGO_PKG_VERSION"),
+        "uptime_secs": uptime_secs,
+    }))
+}
+
+async fn api_update_check() -> Json<Value> {
+    match fetch_update_info().await {
+        Ok(info) => Json(json!({
+            "has_update": info.has_update,
+            "current_version": info.current_version,
+            "latest_version": info.latest_version,
+            "download_url": info.download_url,
+            "release_notes": info.release_notes,
+            "checksum_url": info.checksum_url,
+        })),
+        Err(e) => Json(json!({
+            "has_update": false,
+            "current_version": env!("CARGO_PKG_VERSION"),
+            "latest_version": env!("CARGO_PKG_VERSION"),
+            "error": format!("{e}"),
+        })),
+    }
+}
+
+async fn api_update_install() -> Json<Value> {
+    let info = match fetch_update_info().await {
+        Ok(info) => info,
+        Err(e) => {
+            return Json(json!({
+                "success": false,
+                "message": format!("{e}"),
+            }));
+        }
+    };
+
+    if !info.has_update {
+        return Json(json!({
+            "success": true,
+            "message": format!("Already up to date ({})", info.current_version),
+            "version": info.current_version,
+        }));
+    }
+
+    let version = info.latest_version.clone();
+    match download_and_install(&info).await {
+        Ok(msg) => Json(json!({
+            "success": true,
+            "message": msg,
+            "version": version,
+        })),
+        Err(e) => Json(json!({
+            "success": false,
+            "message": format!("{e}"),
+        })),
+    }
+}
+
 async fn favicon() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "image/svg+xml")],
@@ -623,6 +712,7 @@ pub fn create_router() -> Router {
         port: 9876,
         groups: RwLock::new(GroupStore::new()),
         conflicts: RwLock::new(ConflictStore::new()),
+        started_at: Instant::now(),
     });
 
     create_router_with_state(state)
@@ -649,6 +739,10 @@ pub fn create_router_with_state(state: Arc<AppState>) -> Router {
         .route("/api/groups/{group_id}/members", get(api_groups_members))
         .route("/api/conflicts", get(api_conflicts_list))
         .route("/api/conflicts/resolve", post(api_conflicts_resolve))
+        .route("/api/cloud/test", post(api_cloud_test))
+        .route("/api/server/info", get(api_server_info))
+        .route("/api/update/check", get(api_update_check))
+        .route("/api/update/install", post(api_update_install))
         .with_state(state)
 }
 
@@ -729,6 +823,7 @@ pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
         port,
         groups: RwLock::new(GroupStore::new()),
         conflicts: RwLock::new(ConflictStore::new()),
+        started_at: Instant::now(),
     });
 
     let app = create_router_with_state(state);
@@ -795,6 +890,7 @@ mod tests {
             port: 9876,
             groups: RwLock::new(GroupStore::new()),
             conflicts: RwLock::new(conflict_store),
+            started_at: Instant::now(),
         })
     }
 
@@ -1132,5 +1228,102 @@ mod tests {
             .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["synced"], 1);
+    }
+
+    #[tokio::test]
+    async fn test_cloud_test_disabled() {
+        let app = create_router_with_state(test_state());
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/cloud/test")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["success"], false);
+        assert_eq!(json["message"], "Cloud sync is disabled");
+    }
+
+    #[tokio::test]
+    async fn test_cloud_test_no_endpoint() {
+        let state = test_state();
+        {
+            let mut cfg = state.config.write().await;
+            cfg.cloud.enabled = true;
+            cfg.cloud.endpoint.clear();
+        }
+        let app = create_router_with_state(state);
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/cloud/test")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["success"], false);
+        assert_eq!(json["message"], "No cloud endpoint configured");
+    }
+
+    #[tokio::test]
+    async fn test_cloud_test_backend_not_yet_integrated() {
+        let state = test_state();
+        {
+            let mut cfg = state.config.write().await;
+            cfg.cloud.enabled = true;
+            cfg.cloud.endpoint = "https://s3.example.com".to_string();
+        }
+        let app = create_router_with_state(state);
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/cloud/test")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["success"], false);
+        let msg = json["message"].as_str().expect("message string");
+        assert!(
+            msg.starts_with("Backend not yet integrated:"),
+            "unexpected message: {msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_server_info_shape_version_and_uptime() {
+        let app = create_router_with_state(test_state());
+        let req = Request::builder()
+            .uri("/api/server/info")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        let config_path = json["config_path"].as_str().expect("config_path");
+        assert!(!config_path.is_empty());
+
+        let port = json["port"].as_u64().expect("port as u64");
+        assert_eq!(port, 9876);
+
+        let version = json["version"].as_str().expect("version");
+        assert!(!version.is_empty());
+
+        // u64 guarantees non-negative; confirms JSON encodes a whole seconds count.
+        let _uptime: u64 = json["uptime_secs"].as_u64().expect("uptime_secs");
     }
 }

@@ -12,12 +12,27 @@
     --hi:#D4C9B0;--ok:#A8B5A0;--grid:#3A3632;--border:#8B8070;
     --danger:#C85A41;--info:#7A9EBF;
   }
+  [data-theme="light"]{
+    --bg:#f0ebe3;--panel:#e8e0d4;--surface:#ddd5c8;
+    --fg:#2a2520;--fg2:#6b6259;--accent:#8b7355;
+    --hi:#5a4a38;--ok:#5a7a52;--grid:#d0c8ba;--border:#c4baa8;
+    --danger:#a85a4a;--info:#5a6a7a;
+  }
+  [data-theme="light"] .scan{opacity:0}
+  [data-theme="light"] .log{background:#e8e0d4}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--fg);font-family:'Rajdhani',sans-serif;min-height:100vh}
   .scan{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:100}
   header{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace}
   header .logo{color:var(--hi);letter-spacing:.2em;font-size:1.1rem}
   header .ver{color:var(--fg2);font-size:.8rem}
+  .header-controls{display:flex;align-items:center;gap:.75rem}
+  .lang-switch{display:flex;border:1px solid var(--border)}
+  .lang-btn{background:none;border:none;color:var(--fg2);padding:.2rem .5rem;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.75rem;transition:all .2s;letter-spacing:.05em}
+  .lang-btn:hover{color:var(--fg)}
+  .lang-btn.active{background:var(--accent);color:var(--bg)}
+  .theme-toggle{background:none;border:1px solid var(--border);color:var(--fg2);font-size:1rem;cursor:pointer;padding:.15rem .4rem;transition:all .2s;line-height:1}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
   .status-bar{display:flex;gap:2rem;padding:.75rem 2rem;background:var(--panel);border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace;font-size:.85rem;flex-wrap:wrap}
   .status-bar .item{display:flex;gap:.5rem;align-items:center}
   .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -77,150 +92,533 @@
   .add-file-row input{flex:1;padding:.4rem .6rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none}
   .add-file-row input:focus{border-color:var(--accent)}
   .section{margin-bottom:2rem}
+  .cloud-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  .cloud-status{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:'Share Tech Mono',monospace;font-size:.85rem}
+  .panel-title{font-family:'Share Tech Mono',monospace;font-size:.85rem;color:var(--accent);letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--grid)}
   @media(max-width:640px){
     .form-row{grid-template-columns:1fr}
     .info-grid{grid-template-columns:1fr 1fr}
     .status-bar{gap:1rem;padding:.5rem 1rem}
     main{padding:0 1rem}
     header{padding:.75rem 1rem}
+    .cloud-layout{grid-template-columns:1fr}
+    .header-controls{gap:.5rem}
   }
+  .help-tip{display:inline-block;position:relative;vertical-align:middle;margin-left:.3rem}
+  .help-tip .help-trigger{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border);background:none;color:var(--fg2);font-family:'Share Tech Mono',monospace;font-size:.65rem;cursor:help;line-height:1;transition:all .2s;padding:0}
+  .help-tip:hover .help-trigger,.help-tip:focus-within .help-trigger{border-color:var(--accent);color:var(--accent)}
+  .help-tip .help-content{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:8px 12px;font-family:'Rajdhani',sans-serif;font-size:.8rem;color:var(--fg);max-width:280px;min-width:180px;white-space:normal;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.2);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s;z-index:50;text-align:left;font-weight:400;letter-spacing:normal}
+  .help-tip .help-content::before{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
+  .help-tip .help-content::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--panel)}
+  .help-tip:hover .help-content,.help-tip:focus-within .help-content{opacity:1;visibility:visible;pointer-events:auto}
+  .tab-bar .help-tip{margin-left:0;margin-right:.4rem}
+  h2 .help-tip{vertical-align:baseline}
+  @media(max-width:640px){
+    .help-tip .help-content{max-width:90vw;left:auto;right:-1rem;transform:none}
+    .help-tip .help-content::before,.help-tip .help-content::after{left:auto;right:1rem}
+  }
+  .update-available{padding:12px;border:1px solid var(--accent);border-radius:4px;margin:12px 0}
+  .update-badge{display:inline-block;padding:4px 12px;border-radius:12px;font-size:.85rem;font-weight:bold;background:var(--accent);color:var(--bg);margin-bottom:8px;font-family:'Share Tech Mono',monospace}
+  .update-badge.ok{background:var(--ok);color:var(--bg)}
+  [data-theme="light"] .update-badge.ok{color:var(--bg)}
+  .update-notes{font-size:.8rem;color:var(--fg2);max-height:150px;overflow-y:auto;white-space:pre-wrap;padding:8px;background:var(--surface);border-radius:4px;margin:8px 0;border:1px solid var(--grid)}
+  .update-current{color:var(--ok);padding:8px 0;font-family:'Share Tech Mono',monospace;font-size:.85rem}
+  .update-error{color:var(--danger);padding:8px 0;font-family:'Share Tech Mono',monospace;font-size:.85rem}
+  .update-success{padding:12px;border:1px solid var(--ok);border-radius:4px;margin:12px 0}
+  .update-restart{color:var(--accent);font-style:italic;margin-top:8px;font-size:.85rem}
+  .update-status{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .update-result-area{display:none;margin-top:12px}
+  .update-result-area.visible{display:block}
+  #install-update-btn{width:100%;margin-top:8px}
+  .toast.info{border-color:var(--info);color:var(--info)}
 </style>
 </head>
 <body>
 <div class="scan"></div>
 <div class="toast-container" id="toasts"></div>
-<header><span class="logo">ECHOACCESS</span><span class="ver" id="version">v0.1.2</span></header>
+<header>
+  <span class="logo">ECHOACCESS</span>
+  <div class="header-controls">
+    <div class="lang-switch">
+      <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en')">EN</button>
+      <button class="lang-btn" data-lang="zh" onclick="switchLanguage('zh')">ZH</button>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">&#9728;</button>
+    <span class="ver" id="version">v0.1.2</span>
+  </div>
+</header>
 <div class="status-bar">
   <div class="item"><div class="dot" id="session-dot"></div><span id="session-text">Session: ...</span></div>
   <div class="item"><div class="dot" id="cloud-dot"></div><span id="cloud-text">Cloud: ...</span></div>
-  <div class="item"><div class="dot green"></div><span>Server: Running</span></div>
+  <div class="item"><div class="dot green"></div><span data-i18n="status_server_running">Server: Running</span></div>
 </div>
 <main>
   <div class="section">
-    <h2>// SYNC STATUS</h2>
+    <h2><span data-i18n="sec_sync_status">// SYNC STATUS</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="sync-status"></span></span></h2>
     <div class="file-list" id="file-list">
       <div class="skeleton"></div>
       <div class="skeleton"></div>
       <div class="skeleton"></div>
     </div>
     <div class="add-file-row">
-      <input type="text" id="new-file-path" placeholder="path/to/file..." />
-      <button class="btn btn-outline btn-sm" onclick="addFile()">+ ADD</button>
+      <input type="text" id="new-file-path" data-i18n-ph="ph_file_path" placeholder="path/to/file..." />
+      <button class="btn btn-outline btn-sm" onclick="addFile()" data-i18n="btn_add">+ ADD</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-add-path"></span></span>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" id="btn-upload" onclick="syncUpload()">UPLOAD</button>
-      <button class="btn btn-outline" id="btn-download" onclick="syncDownload()">DOWNLOAD</button>
-      <button class="btn btn-outline" onclick="refreshAll()">REFRESH</button>
+      <button class="btn btn-primary" id="btn-upload" onclick="syncUpload()" data-i18n="btn_upload">UPLOAD</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-upload"></span></span>
+      <button class="btn btn-outline" id="btn-download" onclick="syncDownload()" data-i18n="btn_download">DOWNLOAD</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-download"></span></span>
+      <button class="btn btn-outline" onclick="refreshAll()" data-i18n="btn_refresh">REFRESH</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-refresh"></span></span>
     </div>
   </div>
 
   <div class="section">
-    <h2>// OVERVIEW</h2>
+    <h2><span data-i18n="sec_overview">// OVERVIEW</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="overview"></span></span></h2>
     <div class="info-grid">
-      <div class="info-cell"><div class="label">PROFILES</div><div class="value" id="profiles">-</div></div>
-      <div class="info-cell"><div class="label">SYNCED FILES</div><div class="value" id="synced">-</div></div>
-      <div class="info-cell"><div class="label">CONFLICTS</div><div class="value" id="conflicts">-</div></div>
-      <div class="info-cell"><div class="label">PENDING</div><div class="value" id="pending-count">-</div></div>
+      <div class="info-cell"><div class="label" data-i18n="info_profiles">PROFILES</div><div class="value" id="profiles">-</div></div>
+      <div class="info-cell"><div class="label" data-i18n="info_synced">SYNCED FILES</div><div class="value" id="synced">-</div></div>
+      <div class="info-cell"><div class="label" data-i18n="info_conflicts">CONFLICTS</div><div class="value" id="conflicts">-</div></div>
+      <div class="info-cell"><div class="label" data-i18n="info_pending">PENDING</div><div class="value" id="pending-count">-</div></div>
     </div>
   </div>
 
   <div class="section">
-    <h2>// CONFIGURATION</h2>
+    <h2><span data-i18n="sec_configuration">// CONFIGURATION</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="configuration"></span></span></h2>
     <div class="tab-bar">
-      <button class="tab active" onclick="switchTab('general',this)">GENERAL</button>
-      <button class="tab" onclick="switchTab('session',this)">SESSION</button>
-      <button class="tab" onclick="switchTab('trigger',this)">TRIGGER</button>
-      <button class="tab" onclick="switchTab('cloud',this)">CLOUD</button>
-      <button class="tab" onclick="switchTab('update',this)">UPDATE</button>
+      <button class="tab active" onclick="switchTab('general',this)" data-i18n="tab_general">GENERAL</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="tab-general"></span></span>
+      <button class="tab" onclick="switchTab('session',this)" data-i18n="tab_session">SESSION</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="tab-session"></span></span>
+      <button class="tab" onclick="switchTab('trigger',this)" data-i18n="tab_trigger">TRIGGER</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="tab-trigger"></span></span>
+      <button class="tab" onclick="switchTab('cloud',this)" data-i18n="tab_cloud">CLOUD</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="tab-cloud"></span></span>
+      <button class="tab" onclick="switchTab('update',this)" data-i18n="tab_update">UPDATE</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="tab-update"></span></span>
     </div>
     <div id="tab-general" class="tab-content active">
       <div class="form-row">
-        <div class="form-group"><label>LANGUAGE</label><input id="cfg-language" type="text" /></div>
-        <div class="form-group"><label>LOG LEVEL</label>
+        <div class="form-group"><label data-i18n="lbl_language">LANGUAGE</label><input id="cfg-language" type="text" /></div>
+        <div class="form-group"><label data-i18n="lbl_log_level">LOG LEVEL</label>
           <select id="cfg-log-level"><option value="trace">trace</option><option value="debug">debug</option><option value="info">info</option><option value="warn">warn</option><option value="error">error</option></select>
         </div>
       </div>
-      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-start" /> AUTO START</label>
+      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-start" /> <span data-i18n="lbl_auto_start">AUTO START</span></label>
     </div>
     <div id="tab-session" class="tab-content">
       <div class="form-row">
-        <div class="form-group"><label>TIMEOUT (SECONDS)</label><input id="cfg-timeout" type="number" /></div>
-        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-auto-lock" /> AUTO LOCK</label></div>
+        <div class="form-group"><label data-i18n="lbl_timeout">TIMEOUT (SECONDS)</label><input id="cfg-timeout" type="number" /></div>
+        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-auto-lock" /> <span data-i18n="lbl_auto_lock">AUTO LOCK</span></label></div>
       </div>
     </div>
     <div id="tab-trigger" class="tab-content">
       <div class="form-row">
-        <div class="form-group"><label>HOTKEY</label><input id="cfg-hotkey" type="text" /></div>
-        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-on-login" /> ON LOGIN</label></div>
+        <div class="form-group"><label data-i18n="lbl_hotkey">HOTKEY</label><input id="cfg-hotkey" type="text" /></div>
+        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-on-login" /> <span data-i18n="lbl_on_login">ON LOGIN</span></label></div>
       </div>
     </div>
     <div id="tab-cloud" class="tab-content">
-      <div class="form-group"><label>ENDPOINT</label><input id="cfg-endpoint" type="text" placeholder="https://oss.example.com" /></div>
-      <div class="form-row">
-        <div class="form-group"><label>SYNC INTERVAL (SECONDS)</label><input id="cfg-sync-interval" type="number" /></div>
-        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-cloud-enabled" /> ENABLED</label></div>
+      <div class="cloud-status">
+        <div class="dot gray" id="cloud-cfg-dot"></div>
+        <span id="cloud-cfg-status" data-i18n="cloud_checking">Cloud: checking...</span>
+      </div>
+      <div class="cloud-layout">
+        <div>
+          <div class="panel-title" data-i18n="cloud_configuration">CLOUD CONFIGURATION</div>
+          <label class="checkbox-label"><input type="checkbox" id="cfg-cloud-enabled" onchange="updateCloudDot()" /> <span data-i18n="lbl_cloud_enabled">CLOUD SYNC ENABLED</span></label>
+          <div class="form-group" style="margin-top:1rem"><label data-i18n="lbl_endpoint">ENDPOINT URL</label><input id="cfg-endpoint" type="text" data-i18n-ph="ph_endpoint" placeholder="https://s3.example.com/bucket" /></div>
+          <div class="form-group"><label data-i18n="lbl_sync_interval">SYNC INTERVAL (SECONDS)</label><input id="cfg-sync-interval" type="number" /></div>
+          <div style="margin-top:1rem">
+            <button class="btn btn-outline" id="btn-cloud-test" onclick="testCloudConnection()" data-i18n="btn_test_connection">TEST CONNECTION</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-test-connection"></span></span>
+          </div>
+        </div>
+        <div>
+          <div class="panel-title" data-i18n="cloud_server_info">SERVER INFO</div>
+          <div class="info-grid" style="margin-top:0">
+            <div class="info-cell"><div class="label" data-i18n="info_config_path">CONFIG PATH</div><div class="value" id="srv-config-path" style="font-size:.8rem;word-break:break-all">-</div></div>
+            <div class="info-cell"><div class="label" data-i18n="info_port">PORT</div><div class="value" id="srv-port">-</div></div>
+            <div class="info-cell"><div class="label" data-i18n="info_version">VERSION</div><div class="value" id="srv-version">-</div></div>
+            <div class="info-cell"><div class="label" data-i18n="info_uptime">UPTIME</div><div class="value" id="srv-uptime">-</div></div>
+          </div>
+        </div>
       </div>
     </div>
     <div id="tab-update" class="tab-content">
-      <div class="form-row">
-        <div class="form-group"><label>CHECK INTERVAL (HOURS)</label><input id="cfg-check-interval" type="number" /></div>
-        <div class="form-group"><label>CHANNEL</label><input id="cfg-channel" type="text" placeholder="stable" /></div>
+      <div class="update-status">
+        <div class="panel-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+          <span data-i18n="update_status_section">UPDATE STATUS</span>
+          <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="tab-update-status"></span></span>
+        </div>
+        <div class="info-grid" style="margin:0 0 12px 0">
+          <div class="info-cell"><div class="label" data-i18n="update_current_version">CURRENT VERSION</div><div class="value" id="update-current-version">-</div></div>
+        </div>
+        <button type="button" class="btn btn-outline" id="check-update-btn" onclick="checkForUpdates()" data-i18n="update_check">Check for Updates</button>
+        <div id="update-result" class="update-result-area" aria-live="polite"></div>
       </div>
-      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-check" /> AUTO CHECK</label>
+      <div class="form-row">
+        <div class="form-group"><label data-i18n="lbl_check_interval">CHECK INTERVAL (HOURS)</label><input id="cfg-check-interval" type="number" /></div>
+        <div class="form-group"><label data-i18n="lbl_channel">CHANNEL</label><input id="cfg-channel" type="text" data-i18n-ph="ph_channel" placeholder="stable" /></div>
+      </div>
+      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-check" /> <span data-i18n="lbl_auto_check">AUTO CHECK</span></label>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" onclick="saveConfig()">SAVE CONFIG</button>
-      <button class="btn btn-outline" onclick="loadConfig()">RESET</button>
+      <button class="btn btn-primary" onclick="saveConfig()" data-i18n="btn_save_config">SAVE CONFIG</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-save-config"></span></span>
+      <button class="btn btn-outline" onclick="loadConfig()" data-i18n="btn_reset">RESET</button>
     </div>
   </div>
 
   <div class="section">
-    <h2>// SYNC GROUPS</h2>
-    <div id="groups-list" class="file-list"><div class="empty-state">No groups defined.</div></div>
+    <h2><span data-i18n="sec_sync_groups">// SYNC GROUPS</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="sync-groups"></span></span></h2>
+    <div id="groups-list" class="file-list"><div class="empty-state" data-i18n="empty_no_groups">No groups defined.</div></div>
     <div class="add-file-row">
-      <input type="text" id="new-group-id" placeholder="group-id" style="flex:0.4" />
-      <input type="text" id="new-group-name" placeholder="Group Name" style="flex:0.6" />
-      <input type="text" id="new-group-prefix" placeholder="path/prefix/" />
-      <button class="btn btn-outline btn-sm" onclick="createGroup()">+ GROUP</button>
+      <input type="text" id="new-group-id" data-i18n-ph="ph_group_id" placeholder="group-id" style="flex:0.4" />
+      <input type="text" id="new-group-name" data-i18n-ph="ph_group_name" placeholder="Group Name" style="flex:0.6" />
+      <input type="text" id="new-group-prefix" data-i18n-ph="ph_path_prefix" placeholder="path/prefix/" />
+      <button class="btn btn-outline btn-sm" onclick="createGroup()" data-i18n="btn_add_group">+ GROUP</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-create-group"></span></span>
     </div>
     <div class="actions">
-      <button class="btn btn-outline" onclick="refreshGroups()">REFRESH GROUPS</button>
+      <button class="btn btn-outline" onclick="refreshGroups()" data-i18n="btn_refresh_groups">REFRESH GROUPS</button>
     </div>
   </div>
 
   <div class="section">
-    <h2>// CONFLICTS</h2>
-    <div id="conflicts-list" class="file-list"><div class="empty-state">No conflicts.</div></div>
+    <h2><span data-i18n="sec_conflicts">// CONFLICTS</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="conflicts"></span></span></h2>
+    <div id="conflicts-list" class="file-list"><div class="empty-state" data-i18n="empty_no_conflicts">No conflicts.</div></div>
     <div class="actions">
-      <button class="btn btn-outline" onclick="refreshConflicts()">REFRESH</button>
+      <button class="btn btn-outline" onclick="refreshConflicts()" data-i18n="btn_refresh">REFRESH</button>
     </div>
   </div>
 
   <div class="section">
-    <h2>// SESSION</h2>
+    <h2><span data-i18n="sec_session">// SESSION</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="session"></span></span></h2>
     <div class="actions">
-      <button class="btn btn-primary" id="btn-unlock" onclick="sessionAction('unlock')">UNLOCK</button>
-      <button class="btn btn-outline" id="btn-lock" onclick="sessionAction('lock')">LOCK</button>
-      <input type="password" id="session-password" placeholder="password..." style="flex:1;padding:.4rem .6rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none" />
+      <button class="btn btn-primary" id="btn-unlock" onclick="sessionAction('unlock')" data-i18n="btn_unlock">UNLOCK</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-unlock"></span></span>
+      <button class="btn btn-outline" id="btn-lock" onclick="sessionAction('lock')" data-i18n="btn_lock">LOCK</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-lock"></span></span>
+      <input type="password" id="session-password" data-i18n-ph="ph_password" placeholder="password..." style="flex:1;padding:.4rem .6rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none" />
     </div>
   </div>
 
   <div class="section">
-    <h2>// ACTIVITY LOG</h2>
+    <h2><span data-i18n="sec_activity_log">// ACTIVITY LOG</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="activity-log"></span></span></h2>
     <div class="log" id="log">
-      <div><span class="ts">[--:--:--]</span> <span class="ok">Server started</span></div>
+      <div><span class="ts">[--:--:--]</span> <span class="ok" data-i18n="msg_server_started">Server started</span></div>
     </div>
   </div>
 </main>
 <footer>ECHOACCESS // <span id="footer-addr">127.0.0.1:9876</span> // <a href="https://github.com/YoRHa-Agents/EchoAccess" style="color:var(--accent);text-decoration:none">GITHUB</a></footer>
 <script>
+var TRANSLATIONS = {
+  sec_sync_status:{en:'// SYNC STATUS',zh:'// 同步状态'},
+  sec_overview:{en:'// OVERVIEW',zh:'// 系统概览'},
+  sec_configuration:{en:'// CONFIGURATION',zh:'// 系统配置'},
+  sec_sync_groups:{en:'// SYNC GROUPS',zh:'// 同步分组'},
+  sec_conflicts:{en:'// CONFLICTS',zh:'// 冲突管理'},
+  sec_session:{en:'// SESSION',zh:'// 会话安全'},
+  sec_activity_log:{en:'// ACTIVITY LOG',zh:'// 活动日志'},
+  tab_general:{en:'GENERAL',zh:'通用'},
+  tab_session:{en:'SESSION',zh:'会话'},
+  tab_trigger:{en:'TRIGGER',zh:'触发'},
+  tab_cloud:{en:'CLOUD',zh:'云端'},
+  tab_update:{en:'UPDATE',zh:'更新'},
+  btn_upload:{en:'UPLOAD',zh:'上传'},
+  btn_download:{en:'DOWNLOAD',zh:'下载'},
+  btn_refresh:{en:'REFRESH',zh:'刷新'},
+  btn_add:{en:'+ ADD',zh:'+ 添加'},
+  btn_save_config:{en:'SAVE CONFIG',zh:'保存配置'},
+  btn_reset:{en:'RESET',zh:'重置'},
+  btn_unlock:{en:'UNLOCK',zh:'解锁'},
+  btn_lock:{en:'LOCK',zh:'锁定'},
+  btn_add_group:{en:'+ GROUP',zh:'+ 分组'},
+  btn_refresh_groups:{en:'REFRESH GROUPS',zh:'刷新分组'},
+  btn_test_connection:{en:'TEST CONNECTION',zh:'测试连接'},
+  btn_sync:{en:'SYNC',zh:'同步'},
+  btn_ours:{en:'OURS',zh:'本地'},
+  btn_theirs:{en:'THEIRS',zh:'远程'},
+  btn_base:{en:'BASE',zh:'基线'},
+  btn_remove:{en:'Remove',zh:'移除'},
+  btn_delete:{en:'Delete',zh:'删除'},
+  lbl_language:{en:'LANGUAGE',zh:'语言'},
+  lbl_log_level:{en:'LOG LEVEL',zh:'日志级别'},
+  lbl_auto_start:{en:'AUTO START',zh:'自动启动'},
+  lbl_timeout:{en:'TIMEOUT (SECONDS)',zh:'超时时间（秒）'},
+  lbl_auto_lock:{en:'AUTO LOCK',zh:'自动锁定'},
+  lbl_hotkey:{en:'HOTKEY',zh:'快捷键'},
+  lbl_on_login:{en:'ON LOGIN',zh:'登录时启动'},
+  lbl_cloud_enabled:{en:'CLOUD SYNC ENABLED',zh:'启用云同步'},
+  lbl_endpoint:{en:'ENDPOINT URL',zh:'端点地址'},
+  lbl_sync_interval:{en:'SYNC INTERVAL (SECONDS)',zh:'同步间隔（秒）'},
+  lbl_check_interval:{en:'CHECK INTERVAL (HOURS)',zh:'检查间隔（小时）'},
+  lbl_channel:{en:'CHANNEL',zh:'更新通道'},
+  lbl_auto_check:{en:'AUTO CHECK',zh:'自动检查'},
+  info_profiles:{en:'PROFILES',zh:'配置文件'},
+  info_synced:{en:'SYNCED FILES',zh:'已同步文件'},
+  info_conflicts:{en:'CONFLICTS',zh:'冲突'},
+  info_pending:{en:'PENDING',zh:'待处理'},
+  info_config_path:{en:'CONFIG PATH',zh:'配置路径'},
+  info_port:{en:'PORT',zh:'端口'},
+  info_version:{en:'VERSION',zh:'版本'},
+  info_uptime:{en:'UPTIME',zh:'运行时间'},
+  cloud_configuration:{en:'CLOUD CONFIGURATION',zh:'云端配置'},
+  cloud_server_info:{en:'SERVER INFO',zh:'服务器信息'},
+  cloud_checking:{en:'Cloud: checking...',zh:'云端: 检查中...'},
+  cloud_enabled:{en:'Cloud: enabled',zh:'云端: 已启用'},
+  cloud_disabled:{en:'Cloud: disabled',zh:'云端: 已禁用'},
+  status_server_running:{en:'Server: Running',zh:'服务器: 运行中'},
+  status_session:{en:'Session',zh:'会话'},
+  status_cloud:{en:'Cloud',zh:'云端'},
+  status_synced:{en:'synced',zh:'已同步'},
+  status_conflict:{en:'conflict',zh:'冲突'},
+  status_deleted:{en:'deleted',zh:'已删除'},
+  status_pending:{en:'pending',zh:'待处理'},
+  status_modified:{en:'modified',zh:'已修改'},
+  status_new:{en:'new',zh:'新增'},
+  status_resolved:{en:'resolved',zh:'已解决'},
+  status_unresolved:{en:'unresolved',zh:'未解决'},
+  status_locked:{en:'locked',zh:'已锁定'},
+  status_unlocked:{en:'unlocked',zh:'已解锁'},
+  status_connected:{en:'connected',zh:'已连接'},
+  status_disconnected:{en:'disconnected',zh:'未连接'},
+  status_idle:{en:'idle',zh:'空闲'},
+  empty_no_files:{en:'No tracked files. Add a file path above.',zh:'暂无跟踪文件。请在上方添加文件路径。'},
+  empty_no_groups:{en:'No groups defined.',zh:'暂无分组。'},
+  empty_no_conflicts:{en:'No conflicts.',zh:'暂无冲突。'},
+  ph_file_path:{en:'path/to/file...',zh:'文件路径...'},
+  ph_group_id:{en:'group-id',zh:'分组ID'},
+  ph_group_name:{en:'Group Name',zh:'分组名称'},
+  ph_path_prefix:{en:'path/prefix/',zh:'路径前缀/'},
+  ph_password:{en:'password...',zh:'密码...'},
+  ph_endpoint:{en:'https://s3.example.com/bucket',zh:'https://s3.example.com/bucket'},
+  ph_channel:{en:'stable',zh:'stable'},
+  msg_config_saved:{en:'Configuration saved',zh:'配置已保存'},
+  msg_config_loaded:{en:'Config loaded',zh:'配置已加载'},
+  msg_config_load_failed:{en:'Config load failed',zh:'配置加载失败'},
+  msg_config_save_failed:{en:'Config save failed',zh:'配置保存失败'},
+  msg_save_failed:{en:'Save failed',zh:'保存失败'},
+  msg_refreshing:{en:'Refreshing...',zh:'刷新中...'},
+  msg_refresh_complete:{en:'Refresh complete',zh:'刷新完成'},
+  msg_upload_triggered:{en:'Sync upload triggered...',zh:'同步上传已触发...'},
+  msg_upload_failed:{en:'Upload failed',zh:'上传失败'},
+  msg_upload_error:{en:'Upload error',zh:'上传出错'},
+  msg_upload:{en:'Upload',zh:'上传'},
+  msg_download_triggered:{en:'Sync download triggered...',zh:'同步下载已触发...'},
+  msg_download_failed:{en:'Download failed',zh:'下载失败'},
+  msg_download_error:{en:'Download error',zh:'下载出错'},
+  msg_download:{en:'Download',zh:'下载'},
+  msg_enter_file_path:{en:'Enter a file path',zh:'请输入文件路径'},
+  msg_file_exists:{en:'File already tracked',zh:'文件已被跟踪'},
+  msg_added:{en:'Added',zh:'已添加'},
+  msg_add_failed:{en:'Add failed',zh:'添加失败'},
+  msg_removed:{en:'Removed',zh:'已移除'},
+  msg_remove_failed:{en:'Remove failed',zh:'移除失败'},
+  msg_groups_failed:{en:'Groups refresh failed',zh:'分组刷新失败'},
+  msg_group_required:{en:'Group ID and name required',zh:'需要分组ID和名称'},
+  msg_create_failed:{en:'Create failed',zh:'创建失败'},
+  msg_delete_failed:{en:'Delete failed',zh:'删除失败'},
+  msg_batch_sync_failed:{en:'Batch sync failed',zh:'批量同步失败'},
+  msg_batch_sync:{en:'Batch sync',zh:'批量同步'},
+  msg_conflicts_failed:{en:'Conflicts refresh failed',zh:'冲突刷新失败'},
+  msg_resolve_failed:{en:'Resolve failed',zh:'解决失败'},
+  msg_resolved:{en:'Resolved',zh:'已解决'},
+  msg_status_failed:{en:'Status refresh failed',zh:'状态刷新失败'},
+  msg_files_failed:{en:'File list refresh failed',zh:'文件列表刷新失败'},
+  msg_server_info_failed:{en:'Server info failed',zh:'服务器信息获取失败'},
+  msg_testing_cloud:{en:'Testing cloud connection...',zh:'测试云端连接中...'},
+  msg_cloud_test:{en:'Cloud test',zh:'云端测试'},
+  msg_cloud_test_failed:{en:'Connection test failed',zh:'连接测试失败'},
+  msg_cloud_test_error:{en:'Cloud test error',zh:'云端测试出错'},
+  msg_password_required:{en:'Password required',zh:'需要密码'},
+  msg_session_unlocked:{en:'Session unlocked',zh:'会话已解锁'},
+  msg_session_locked:{en:'Session locked',zh:'会话已锁定'},
+  msg_session_failed:{en:'Session action failed',zh:'会话操作失败'},
+  msg_server_started:{en:'Server started',zh:'服务器已启动'},
+  msg_now_tracking:{en:'Now tracking',zh:'开始跟踪'},
+  msg_lang_changed:{en:'Language changed',zh:'语言已切换'},
+  msg_theme_changed:{en:'Theme changed',zh:'主题已切换'},
+  update_status_section:{en:'UPDATE STATUS',zh:'更新状态'},
+  update_check:{en:'Check for Updates',zh:'检查更新'},
+  update_checking:{en:'Checking...',zh:'检查中...'},
+  update_available:{en:'Update Available',zh:'有可用更新'},
+  update_up_to_date:{en:'You are running the latest version',zh:'您正在使用最新版本'},
+  update_install:{en:'Install Update',zh:'安装更新'},
+  update_installing:{en:'Installing...',zh:'安装中...'},
+  update_installed:{en:'Update Installed',zh:'更新已安装'},
+  update_restart_notice:{en:'Please restart EchoAccess to use the new version.',zh:'请重启 EchoAccess 以使用新版本。'},
+  update_check_failed:{en:'Update check failed',zh:'检查更新失败'},
+  update_install_failed:{en:'Update installation failed',zh:'安装更新失败'},
+  update_new_version:{en:'New version available:',zh:'新版本可用：'},
+  update_current_version:{en:'Current Version',zh:'当前版本'}
+};
+
+var HELP_TEXTS = {
+  'sync-status': {
+    en: 'View and manage your synchronized files. Add file paths to track, then upload or download to sync with cloud storage.',
+    zh: '查看和管理您的同步文件。添加文件路径进行跟踪，然后上传或下载以与云存储同步。'
+  },
+  'overview': {
+    en: 'System overview showing key metrics: tracked files count, sync groups, active conflicts, and cloud connection status.',
+    zh: '系统概览，显示关键指标：已跟踪文件数、同步分组数、活跃冲突数和云连接状态。'
+  },
+  'configuration': {
+    en: 'Manage application settings across five categories. Changes are saved to your local config file and can sync across devices.',
+    zh: '管理应用程序设置，分为五个类别。更改会保存到本地配置文件，并可跨设备同步。'
+  },
+  'sync-groups': {
+    en: 'Organize files into groups for batch synchronization. Create groups with file prefixes and tags for easier management.',
+    zh: '将文件组织成分组以进行批量同步。使用文件前缀和标签创建分组，便于管理。'
+  },
+  'conflicts': {
+    en: 'Files with conflicting versions between local and cloud. Review each conflict and choose which version to keep.',
+    zh: '本地与云端版本冲突的文件。审查每个冲突并选择保留哪个版本。'
+  },
+  'session': {
+    en: 'Secure your session with password protection. Lock to prevent unauthorized access, unlock with your session password.',
+    zh: '使用密码保护您的会话安全。锁定以防止未授权访问，使用会话密码解锁。'
+  },
+  'activity-log': {
+    en: 'Real-time log of all system activities including sync operations, configuration changes, and error events.',
+    zh: '所有系统活动的实时日志，包括同步操作、配置更改和错误事件。'
+  },
+  'btn-upload': {
+    en: 'Upload all tracked files to cloud storage. Files will be encrypted before upload if encryption is configured.',
+    zh: '将所有已跟踪文件上传到云存储。如果已配置加密，文件将在上传前加密。'
+  },
+  'btn-download': {
+    en: 'Download all files from cloud storage to local. Local files will be overwritten with cloud versions.',
+    zh: '从云存储下载所有文件到本地。本地文件将被云端版本覆盖。'
+  },
+  'btn-refresh': {
+    en: 'Refresh the file list and sync status. Checks for changes in tracked files and updates their status.',
+    zh: '刷新文件列表和同步状态。检查已跟踪文件的变更并更新其状态。'
+  },
+  'btn-add-path': {
+    en: 'Add a new file path to track for synchronization. Enter the full path to a file you want to sync.',
+    zh: '添加新的文件路径进行同步跟踪。输入您要同步的文件的完整路径。'
+  },
+  'btn-scan-dir': {
+    en: 'Scan a directory recursively to discover files for synchronization. Hidden files and common build directories are excluded.',
+    zh: '递归扫描目录以发现可同步的文件。隐藏文件和常见构建目录会被排除。'
+  },
+  'btn-lock': {
+    en: 'Lock the current session. While locked, sync operations and configuration changes are disabled.',
+    zh: '锁定当前会话。锁定期间，同步操作和配置更改将被禁用。'
+  },
+  'btn-unlock': {
+    en: 'Unlock the session with your password to resume normal operations.',
+    zh: '使用密码解锁会话以恢复正常操作。'
+  },
+  'btn-test-connection': {
+    en: 'Test the connection to the configured cloud endpoint. Verifies that the backend is reachable and properly configured.',
+    zh: '测试与配置的云端端点的连接。验证后端是否可访问且配置正确。'
+  },
+  'btn-create-group': {
+    en: 'Create a new sync group to organize related files. Set a name, file path prefixes, and optional tags.',
+    zh: '创建新的同步分组以组织相关文件。设置名称、文件路径前缀和可选标签。'
+  },
+  'tab-general': {
+    en: 'General settings: UI language, log verbosity level, and auto-start on system login.',
+    zh: '通用设置：界面语言、日志详细级别和系统登录时自动启动。'
+  },
+  'tab-session': {
+    en: 'Session settings: auto-lock timeout duration and whether to lock automatically after inactivity.',
+    zh: '会话设置：自动锁定超时时间以及是否在不活动后自动锁定。'
+  },
+  'tab-trigger': {
+    en: 'Trigger settings: global hotkey to open EchoAccess, and whether to trigger sync on system login.',
+    zh: '触发设置：打开 EchoAccess 的全局热键，以及是否在系统登录时触发同步。'
+  },
+  'tab-cloud': {
+    en: 'Cloud sync settings: enable/disable cloud synchronization, configure the storage endpoint URL, and set the sync interval.',
+    zh: '云端同步设置：启用/禁用云端同步，配置存储端点 URL，以及设置同步间隔。'
+  },
+  'tab-update': {
+    en: 'Update settings: automatic update checking, check interval, and release channel selection.',
+    zh: '更新设置：自动更新检查、检查间隔和发布频道选择。'
+  },
+  'tab-update-status': {
+    en: 'Check for newer versions of EchoAccess on GitHub. If an update is available, you can install it directly from here.',
+    zh: '在 GitHub 上检查 EchoAccess 的新版本。如果有可用更新，您可以直接从此处安装。'
+  },
+  'btn-save-config': {
+    en: 'Save all configuration changes to disk. Settings are persisted in your local config.toml file.',
+    zh: '将所有配置更改保存到磁盘。设置会持久化到本地 config.toml 文件中。'
+  }
+};
+
+function ht(key) {
+  var entry = HELP_TEXTS[key];
+  if (!entry) return '';
+  return entry[currentLang] || entry.en || '';
+}
+
+var currentLang = localStorage.getItem('ea-lang') || 'en';
+var currentTheme = localStorage.getItem('ea-theme') || 'dark';
+document.documentElement.dataset.theme = currentTheme;
+document.documentElement.lang = currentLang;
 var _loading = false;
+
+function t(key) {
+  var entry = TRANSLATIONS[key];
+  if (!entry) return key;
+  return entry[currentLang] || entry.en || key;
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+    el.placeholder = t(el.getAttribute('data-i18n-ph'));
+  });
+}
+
+function initHelpTooltips() {
+  document.querySelectorAll('[data-help]').forEach(function(el) {
+    el.textContent = ht(el.dataset.help);
+  });
+}
+
+function updateLangButtons() {
+  document.querySelectorAll('.lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
+  });
+}
+
+function updateThemeIcon() {
+  var btn = document.getElementById('theme-toggle');
+  btn.textContent = currentTheme === 'dark' ? '\u2600' : '\u263E';
+}
+
+function switchLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('ea-lang', lang);
+  document.documentElement.lang = lang;
+  applyTranslations();
+  initHelpTooltips();
+  updateLangButtons();
+  var langInput = document.getElementById('cfg-language');
+  if (langInput) langInput.value = lang;
+  refreshStatus();
+  refreshFiles();
+  refreshGroups();
+  refreshConflicts();
+  updateConfigField('general', 'language', lang);
+}
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('ea-theme', currentTheme);
+  document.documentElement.dataset.theme = currentTheme;
+  updateThemeIcon();
+  updateConfigField('general', 'theme', currentTheme);
+}
+
+function updateConfigField(section, key, value) {
+  fetch('/api/config').then(function(r){ return r.json(); }).then(function(cfg) {
+    if (!cfg[section]) cfg[section] = {};
+    cfg[section][key] = value;
+    return fetch('/api/config', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(cfg) });
+  }).catch(function(){});
+}
 
 function log(msg, cls) {
   cls = cls || '';
   var el = document.getElementById('log');
-  var t = new Date().toLocaleTimeString('en-GB',{hour12:false});
-  el.innerHTML += '<div><span class="ts">['+t+']</span> <span class="'+cls+'">'+msg+'</span></div>';
+  var ti = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  el.innerHTML += '<div><span class="ts">['+ti+']</span> <span class="'+cls+'">'+msg+'</span></div>';
   el.scrollTop = el.scrollHeight;
 }
 
@@ -233,12 +631,24 @@ function toast(msg, type) {
   setTimeout(function(){ d.remove(); }, 3500);
 }
 
+function showToast(message, type) {
+  var cls = '';
+  if (type === 'ok') { cls = 'success'; }
+  else if (type === 'err') { cls = 'error'; }
+  else if (type === 'info') { cls = 'info'; }
+  else if (type === 'warn') { cls = ''; }
+  toast(message, cls);
+}
+
 function setLoading(id, loading) {
   var btn = document.getElementById(id);
   if (!btn) { return; }
   btn.disabled = loading;
   if (loading) { btn.dataset.orig = btn.textContent; btn.textContent = '...'; }
-  else if (btn.dataset.orig) { btn.textContent = btn.dataset.orig; }
+  else {
+    var key = btn.getAttribute('data-i18n');
+    btn.textContent = key ? t(key) : (btn.dataset.orig || '');
+  }
 }
 
 function badgeClass(status) {
@@ -251,7 +661,7 @@ function badgeClass(status) {
 function renderFiles(files) {
   var el = document.getElementById('file-list');
   if (!files || files.length === 0) {
-    el.innerHTML = '<div class="empty-state">No tracked files. Add a file path above.</div>';
+    el.innerHTML = '<div class="empty-state">' + t('empty_no_files') + '</div>';
     return;
   }
   var html = '';
@@ -259,9 +669,9 @@ function renderFiles(files) {
     html += '<div class="file-row">';
     html += '<span class="file-path">' + esc(f.path) + '</span>';
     html += '<div class="file-actions">';
-    html += '<span class="badge ' + badgeClass(f.status) + '">' + f.status + '</span>';
+    html += '<span class="badge ' + badgeClass(f.status) + '">' + t('status_' + f.status) + '</span>';
     html += '<span class="file-time">' + esc(f.last_modified || '') + '</span>';
-    html += '<button class="btn-icon" onclick="removeFile(\'' + esc(f.path) + '\')" title="Remove">✕</button>';
+    html += '<button class="btn-icon" onclick="removeFile(\'' + esc(f.path) + '\')" title="' + t('btn_remove') + '">&#10005;</button>';
     html += '</div></div>';
   });
   el.innerHTML = html;
@@ -269,9 +679,100 @@ function renderFiles(files) {
 
 function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+function escapeHtml(s) {
+  return esc(String(s == null ? '' : s));
+}
+
+function setUpdateTabVersion(v) {
+  var el = document.getElementById('update-current-version');
+  if (!el || v == null || v === '') { return; }
+  el.textContent = 'v' + v;
+}
+
+async function checkForUpdates() {
+  var btn = document.querySelector('#check-update-btn');
+  var resultArea = document.querySelector('#update-result');
+  if (!btn || !resultArea) { return; }
+  btn.disabled = true;
+  btn.textContent = t('update_checking');
+  resultArea.innerHTML = '';
+  resultArea.classList.remove('visible');
+
+  try {
+    var res = await fetch('/api/update/check');
+    var data = await res.json();
+
+    if (data.error) {
+      resultArea.innerHTML = '<div class="update-error">' + escapeHtml(data.error) + '</div>';
+      resultArea.classList.add('visible');
+      showToast(t('update_check_failed'), 'err');
+      return;
+    }
+
+    if (data.has_update) {
+      var notesRaw = data.release_notes == null ? '' : String(data.release_notes);
+      var notesEscaped = escapeHtml(notesRaw);
+      var notesPreview = notesEscaped.length > 500 ? notesEscaped.substring(0, 500) + '\u2026' : notesEscaped;
+      resultArea.innerHTML =
+        '<div class="update-available">' +
+        '<div class="update-badge">' + escapeHtml(t('update_available')) + ': v' + escapeHtml(String(data.latest_version || '')) + '</div>' +
+        '<div class="update-notes">' + notesPreview + '</div>' +
+        '<button type="button" class="btn btn-primary" onclick="installUpdate()" id="install-update-btn">' +
+        escapeHtml(t('update_install')) +
+        '</button></div>';
+      resultArea.classList.add('visible');
+      showToast(t('update_new_version') + ' v' + (data.latest_version || ''), 'info');
+    } else {
+      resultArea.innerHTML = '<div class="update-current">' + escapeHtml(t('update_up_to_date')) + '</div>';
+      resultArea.classList.add('visible');
+      showToast(t('update_up_to_date'), 'ok');
+    }
+  } catch (e) {
+    resultArea.innerHTML = '<div class="update-error">' + escapeHtml(t('update_check_failed')) + ': ' + escapeHtml(e.message) + '</div>';
+    resultArea.classList.add('visible');
+    showToast(t('update_check_failed'), 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t('update_check');
+  }
+}
+
+async function installUpdate() {
+  var btn = document.querySelector('#install-update-btn');
+  if (!btn) { return; }
+  btn.disabled = true;
+  btn.textContent = t('update_installing');
+
+  try {
+    var res = await fetch('/api/update/install', { method: 'POST' });
+    var data = await res.json();
+
+    if (data.success) {
+      showToast(data.message, 'ok');
+      var resultArea = document.querySelector('#update-result');
+      if (resultArea) {
+        resultArea.innerHTML =
+          '<div class="update-success">' +
+          '<div class="update-badge ok">' + escapeHtml(t('update_installed')) + ': v' + escapeHtml(String(data.version || '')) + '</div>' +
+          '<div class="update-restart">' + escapeHtml(t('update_restart_notice')) + '</div>' +
+          '</div>';
+        resultArea.classList.add('visible');
+      }
+    } else {
+      showToast(data.message || t('update_install_failed'), 'err');
+      btn.disabled = false;
+      btn.textContent = t('update_install');
+    }
+  } catch (e) {
+    showToast(t('update_install_failed') + ': ' + e.message, 'err');
+    btn.disabled = false;
+    btn.textContent = t('update_install');
+  }
+}
+
 function switchTab(name, el) {
-  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
-  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(tc){ tc.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(tb){ tb.classList.remove('active'); });
   document.getElementById('tab-' + name).classList.add('active');
   el.classList.add('active');
 }
@@ -291,14 +792,16 @@ function loadConfig() {
     document.getElementById('cfg-check-interval').value = c.update.check_interval_hours || 24;
     document.getElementById('cfg-channel').value = c.update.channel || '';
     document.getElementById('cfg-auto-check').checked = c.update.auto_check !== false;
-    log('Config loaded', 'ok');
-  }).catch(function(e){ log('Config load failed: ' + e, 'warn'); });
+    updateCloudDot();
+    log(t('msg_config_loaded'), 'ok');
+  }).catch(function(e){ log(t('msg_config_load_failed') + ': ' + e, 'warn'); });
 }
 
 function saveConfig() {
   var cfg = {
     general: {
       language: document.getElementById('cfg-language').value,
+      theme: currentTheme,
       auto_start: document.getElementById('cfg-auto-start').checked,
       log_level: document.getElementById('cfg-log-level').value
     },
@@ -324,105 +827,105 @@ function saveConfig() {
   fetch('/api/config', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(cfg) })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if (d.error) { toast(d.error, 'error'); log('Config save failed: ' + d.error, 'warn'); }
-      else { toast('Configuration saved', 'success'); log('Config saved', 'ok'); refreshStatus(); }
-    }).catch(function(e){ toast('Save failed: ' + e, 'error'); log('Config save error: ' + e, 'warn'); });
+      if (d.error) { toast(d.error, 'error'); log(t('msg_config_save_failed') + ': ' + d.error, 'warn'); }
+      else { toast(t('msg_config_saved'), 'success'); log(t('msg_config_saved'), 'ok'); refreshStatus(); updateCloudDot(); }
+    }).catch(function(e){ toast(t('msg_save_failed') + ': ' + e, 'error'); log(t('msg_save_failed') + ': ' + e, 'warn'); });
 }
 
 function refreshStatus() {
   fetch('/api/status').then(function(r){return r.json()}).then(function(d){
-    document.getElementById('session-text').textContent = 'Session: ' + d.session;
-    document.getElementById('cloud-text').textContent = 'Cloud: ' + d.cloud;
+    document.getElementById('session-text').textContent = t('status_session') + ': ' + t('status_' + d.session);
+    document.getElementById('cloud-text').textContent = t('status_cloud') + ': ' + t('status_' + d.cloud);
     document.getElementById('session-dot').className = 'dot ' + (d.session==='unlocked'?'green':'red');
     document.getElementById('cloud-dot').className = 'dot ' + (d.cloud==='connected'?'green':'gray');
     document.getElementById('pending-count').textContent = d.pending_files || 0;
     document.getElementById('profiles').textContent = d.profiles_count || 0;
     document.getElementById('synced').textContent = d.synced_files || 0;
     document.getElementById('conflicts').textContent = d.conflicts || 0;
-  }).catch(function(e){ log('Status refresh failed: ' + e, 'warn'); });
+  }).catch(function(e){ log(t('msg_status_failed') + ': ' + e, 'warn'); });
 }
 
 function refreshFiles() {
   fetch('/api/files').then(function(r){return r.json()}).then(function(d){
     renderFiles(d.files || []);
-  }).catch(function(e){ log('File list refresh failed: ' + e, 'warn'); });
+  }).catch(function(e){ log(t('msg_files_failed') + ': ' + e, 'warn'); });
 }
 
 function refreshAll() {
-  log('Refreshing...');
+  log(t('msg_refreshing'));
   Promise.all([
     refreshStatus(),
     refreshFiles()
-  ]).then(function(){ log('Refresh complete', 'ok'); });
+  ]).then(function(){ log(t('msg_refresh_complete'), 'ok'); });
 }
 
 function syncUpload() {
   setLoading('btn-upload', true);
-  log('Sync upload triggered...', 'ok');
+  log(t('msg_upload_triggered'), 'ok');
   fetch('/api/sync/upload', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paths:null}) })
     .then(function(r){return r.json()})
     .then(function(d){
       setLoading('btn-upload', false);
-      if (d.error) { toast(d.error, 'error'); log('Upload failed: ' + d.error, 'warn'); }
-      else { toast(d.message, 'success'); log('Upload: ' + d.message, 'ok'); refreshAll(); }
-    }).catch(function(e){ setLoading('btn-upload', false); toast('Upload failed', 'error'); log('Upload error: ' + e, 'warn'); });
+      if (d.error) { toast(d.error, 'error'); log(t('msg_upload_failed') + ': ' + d.error, 'warn'); }
+      else { toast(d.message, 'success'); log(t('msg_upload') + ': ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ setLoading('btn-upload', false); toast(t('msg_upload_failed'), 'error'); log(t('msg_upload_error') + ': ' + e, 'warn'); });
 }
 
 function syncDownload() {
   setLoading('btn-download', true);
-  log('Sync download triggered...', 'ok');
+  log(t('msg_download_triggered'), 'ok');
   fetch('/api/sync/download', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paths:null}) })
     .then(function(r){return r.json()})
     .then(function(d){
       setLoading('btn-download', false);
-      if (d.error) { toast(d.error, 'error'); log('Download failed: ' + d.error, 'warn'); }
-      else { toast(d.message, 'success'); log('Download: ' + d.message, 'ok'); refreshAll(); }
-    }).catch(function(e){ setLoading('btn-download', false); toast('Download failed', 'error'); log('Download error: ' + e, 'warn'); });
+      if (d.error) { toast(d.error, 'error'); log(t('msg_download_failed') + ': ' + d.error, 'warn'); }
+      else { toast(d.message, 'success'); log(t('msg_download') + ': ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ setLoading('btn-download', false); toast(t('msg_download_failed'), 'error'); log(t('msg_download_error') + ': ' + e, 'warn'); });
 }
 
 function addFile() {
   var input = document.getElementById('new-file-path');
   var path = input.value.trim();
-  if (!path) { toast('Enter a file path', 'error'); return; }
+  if (!path) { toast(t('msg_enter_file_path'), 'error'); return; }
   fetch('/api/files/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path}) })
     .then(function(r){return r.json()})
     .then(function(d){
-      if (d.status === 'exists') { toast('File already tracked', 'error'); }
-      else { toast(d.message, 'success'); log('Added: ' + path, 'ok'); input.value = ''; refreshAll(); }
-    }).catch(function(e){ toast('Add failed: ' + e, 'error'); });
+      if (d.status === 'exists') { toast(t('msg_file_exists'), 'error'); }
+      else { toast(d.message, 'success'); log(t('msg_added') + ': ' + path, 'ok'); input.value = ''; refreshAll(); }
+    }).catch(function(e){ toast(t('msg_add_failed') + ': ' + e, 'error'); });
 }
 
 function removeFile(path) {
   fetch('/api/files/remove', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path}) })
     .then(function(r){return r.json()})
     .then(function(d){
-      toast(d.message, 'success'); log('Removed: ' + path, 'ok'); refreshAll();
-    }).catch(function(e){ toast('Remove failed: ' + e, 'error'); });
+      toast(d.message, 'success'); log(t('msg_removed') + ': ' + path, 'ok'); refreshAll();
+    }).catch(function(e){ toast(t('msg_remove_failed') + ': ' + e, 'error'); });
 }
 
 function refreshGroups() {
   fetch('/api/groups').then(function(r){return r.json()}).then(function(d){
     var el = document.getElementById('groups-list');
     var groups = d.groups || [];
-    if (groups.length === 0) { el.innerHTML = '<div class="empty-state">No groups defined.</div>'; return; }
+    if (groups.length === 0) { el.innerHTML = '<div class="empty-state">' + t('empty_no_groups') + '</div>'; return; }
     var html = '';
     groups.forEach(function(g) {
-      html += '<div class="file-row"><span class="file-path">' + esc(g.id) + ' — ' + esc(g.name) + '</span>';
+      html += '<div class="file-row"><span class="file-path">' + esc(g.id) + ' \u2014 ' + esc(g.name) + '</span>';
       html += '<div class="file-actions">';
       html += '<span class="badge pending">' + (g.tags||[]).join(', ') + '</span>';
-      html += '<button class="btn btn-sm btn-outline" onclick="batchSync(\'' + esc(g.id) + '\')">SYNC</button>';
-      html += '<button class="btn-icon" onclick="deleteGroup(\'' + esc(g.id) + '\')" title="Delete">✕</button>';
+      html += '<button class="btn btn-sm btn-outline" onclick="batchSync(\'' + esc(g.id) + '\')">' + t('btn_sync') + '</button>';
+      html += '<button class="btn-icon" onclick="deleteGroup(\'' + esc(g.id) + '\')" title="' + t('btn_delete') + '">&#10005;</button>';
       html += '</div></div>';
     });
     el.innerHTML = html;
-  }).catch(function(e){ log('Groups refresh failed: ' + e, 'warn'); });
+  }).catch(function(e){ log(t('msg_groups_failed') + ': ' + e, 'warn'); });
 }
 
 function createGroup() {
   var id = document.getElementById('new-group-id').value.trim();
   var name = document.getElementById('new-group-name').value.trim();
   var prefix = document.getElementById('new-group-prefix').value.trim();
-  if (!id || !name) { toast('Group ID and name required', 'error'); return; }
+  if (!id || !name) { toast(t('msg_group_required'), 'error'); return; }
   var body = {id:id, name:name, path_prefixes: prefix ? [prefix] : []};
   fetch('/api/groups', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
@@ -430,69 +933,130 @@ function createGroup() {
       document.getElementById('new-group-id').value = '';
       document.getElementById('new-group-name').value = '';
       document.getElementById('new-group-prefix').value = '';
-    }).catch(function(e){ toast('Create failed: ' + e, 'error'); });
+    }).catch(function(e){ toast(t('msg_create_failed') + ': ' + e, 'error'); });
 }
 
 function deleteGroup(id) {
   fetch('/api/groups/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})})
     .then(function(r){return r.json()}).then(function(d){ toast(d.message, 'success'); refreshGroups(); })
-    .catch(function(e){ toast('Delete failed: ' + e, 'error'); });
+    .catch(function(e){ toast(t('msg_delete_failed') + ': ' + e, 'error'); });
 }
 
 function batchSync(groupId) {
   fetch('/api/sync/batch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:groupId, direction:'upload'})})
     .then(function(r){return r.json()}).then(function(d){
-      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log('Batch sync: ' + d.message, 'ok'); refreshAll(); }
-    }).catch(function(e){ toast('Batch sync failed: ' + e, 'error'); });
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log(t('msg_batch_sync') + ': ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ toast(t('msg_batch_sync_failed') + ': ' + e, 'error'); });
 }
 
 function refreshConflicts() {
   fetch('/api/conflicts').then(function(r){return r.json()}).then(function(d){
     var el = document.getElementById('conflicts-list');
     var conflicts = d.conflicts || [];
-    if (conflicts.length === 0) { el.innerHTML = '<div class="empty-state">No conflicts.</div>'; return; }
+    if (conflicts.length === 0) { el.innerHTML = '<div class="empty-state">' + t('empty_no_conflicts') + '</div>'; return; }
     var html = '';
     conflicts.forEach(function(c) {
       html += '<div class="file-row"><span class="file-path">' + esc(c.path) + '</span>';
       html += '<div class="file-actions">';
-      html += '<span class="badge ' + (c.resolved ? 'synced' : 'conflict') + '">' + (c.resolved ? 'resolved' : 'unresolved') + '</span>';
+      html += '<span class="badge ' + (c.resolved ? 'synced' : 'conflict') + '">' + (c.resolved ? t('status_resolved') : t('status_unresolved')) + '</span>';
       if (!c.resolved) {
-        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'ours\')">OURS</button>';
-        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'theirs\')">THEIRS</button>';
-        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'base\')">BASE</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'ours\')">' + t('btn_ours') + '</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'theirs\')">' + t('btn_theirs') + '</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'base\')">' + t('btn_base') + '</button>';
       }
       html += '</div></div>';
     });
     el.innerHTML = html;
-  }).catch(function(e){ log('Conflicts refresh failed: ' + e, 'warn'); });
+  }).catch(function(e){ log(t('msg_conflicts_failed') + ': ' + e, 'warn'); });
 }
 
 function resolveConflict(path, strategy) {
   fetch('/api/conflicts/resolve', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path, resolution:strategy})})
     .then(function(r){return r.json()}).then(function(d){
-      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log('Resolved: ' + path + ' (' + strategy + ')', 'ok'); refreshConflicts(); refreshAll(); }
-    }).catch(function(e){ toast('Resolve failed: ' + e, 'error'); });
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log(t('msg_resolved') + ': ' + path + ' (' + strategy + ')', 'ok'); refreshConflicts(); refreshAll(); }
+    }).catch(function(e){ toast(t('msg_resolve_failed') + ': ' + e, 'error'); });
 }
 
 function sessionAction(action) {
   var body = {action: action};
   if (action === 'unlock') {
     var pw = document.getElementById('session-password').value;
-    if (!pw) { toast('Password required', 'error'); return; }
+    if (!pw) { toast(t('msg_password_required'), 'error'); return; }
     body.password = pw;
   }
   fetch('/api/session', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
-      if (d.error) { toast(d.error, 'error'); } else { toast('Session ' + action + 'ed', 'success'); document.getElementById('session-password').value = ''; refreshStatus(); }
-    }).catch(function(e){ toast('Session action failed: ' + e, 'error'); });
+      if (d.error) { toast(d.error, 'error'); } else { toast(t(action === 'unlock' ? 'msg_session_unlocked' : 'msg_session_locked'), 'success'); document.getElementById('session-password').value = ''; refreshStatus(); }
+    }).catch(function(e){ toast(t('msg_session_failed') + ': ' + e, 'error'); });
 }
 
+function loadServerInfo() {
+  fetch('/api/server/info').then(function(r){ return r.json(); }).then(function(d) {
+    document.getElementById('srv-config-path').textContent = d.config_path || '-';
+    document.getElementById('srv-port').textContent = d.port || '-';
+    document.getElementById('srv-version').textContent = d.version ? 'v' + d.version : '-';
+    setUpdateTabVersion(d.version);
+    var secs = d.uptime_secs || 0;
+    var hrs = Math.floor(secs / 3600);
+    var mins = Math.floor((secs % 3600) / 60);
+    var s = secs % 60;
+    document.getElementById('srv-uptime').textContent = hrs + 'h ' + mins + 'm ' + s + 's';
+  }).catch(function(e){ log(t('msg_server_info_failed') + ': ' + e, 'warn'); });
+}
+
+function testCloudConnection() {
+  setLoading('btn-cloud-test', true);
+  log(t('msg_testing_cloud'), 'ok');
+  fetch('/api/cloud/test', { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      setLoading('btn-cloud-test', false);
+      if (d.success) {
+        toast(d.message, 'success');
+        log(t('msg_cloud_test') + ': ' + d.message, 'ok');
+      } else {
+        toast(d.message, 'error');
+        log(t('msg_cloud_test') + ': ' + d.message, 'warn');
+      }
+    }).catch(function(e){
+      setLoading('btn-cloud-test', false);
+      toast(t('msg_cloud_test_failed') + ': ' + e, 'error');
+      log(t('msg_cloud_test_error') + ': ' + e, 'warn');
+    });
+}
+
+function updateCloudDot() {
+  var enabled = document.getElementById('cfg-cloud-enabled').checked;
+  var dot = document.getElementById('cloud-cfg-dot');
+  var status = document.getElementById('cloud-cfg-status');
+  dot.className = 'dot ' + (enabled ? 'green' : 'gray');
+  var key = enabled ? 'cloud_enabled' : 'cloud_disabled';
+  status.setAttribute('data-i18n', key);
+  status.textContent = t(key);
+}
+
+applyTranslations();
+initHelpTooltips();
+updateLangButtons();
+updateThemeIcon();
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var focused = document.activeElement;
+    if (focused && focused.closest && focused.closest('.help-tip')) {
+      focused.blur();
+    }
+  }
+});
 fetch('/api/health').then(function(r){return r.json()}).then(function(h){
-  if(h.version) document.getElementById('version').textContent = 'v'+h.version;
+  if (h.version) {
+    document.getElementById('version').textContent = 'v' + h.version;
+    setUpdateTabVersion(h.version);
+  }
 }).catch(function(){});
 refreshStatus();
 refreshFiles();
 loadConfig();
+loadServerInfo();
 refreshGroups();
 refreshConflicts();
 document.getElementById('footer-addr').textContent = location.host;
