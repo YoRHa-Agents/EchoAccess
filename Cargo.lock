@@ -659,10 +659,13 @@ dependencies = [
  "indicatif",
  "open",
  "reqwest",
+ "serde",
  "serde_json",
  "tokio",
+ "toml 0.8.23",
  "tower",
  "tower-http",
+ "tracing",
 ]
 
 [[package]]
@@ -693,6 +696,7 @@ name = "echoax-tui"
 version = "0.1.2"
 dependencies = [
  "crossterm",
+ "dirs",
  "echoax-core",
  "ratatui",
  "tokio",

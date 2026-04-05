@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{EchoAccessError, Result};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AppConfig {
     #[serde(default)]
     pub general: GeneralConfig,

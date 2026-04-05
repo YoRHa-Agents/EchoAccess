@@ -12,6 +12,7 @@ name = "echoax-tui"
 path = "src/main.rs"
 
 [dependencies]
+dirs = "6"
 echoax-core = { path = "../echoax-core" }
 tokio = { version = "1", features = ["full"] }
 ratatui = "0.29"

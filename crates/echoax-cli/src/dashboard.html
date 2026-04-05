@@ -10,6 +10,7 @@
     --bg:#2E2A27;--panel:#4B413D;--surface:#594E4A;
     --fg:#C3BDA8;--fg2:#B0AB98;--accent:#C87941;
     --hi:#D4C9B0;--ok:#A8B5A0;--grid:#3A3632;--border:#8B8070;
+    --danger:#C85A41;--info:#7A9EBF;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--fg);font-family:'Rajdhani',sans-serif;min-height:100vh}
@@ -17,37 +18,77 @@
   header{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace}
   header .logo{color:var(--hi);letter-spacing:.2em;font-size:1.1rem}
   header .ver{color:var(--fg2);font-size:.8rem}
-  .status-bar{display:flex;gap:2rem;padding:.75rem 2rem;background:var(--panel);border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace;font-size:.85rem}
+  .status-bar{display:flex;gap:2rem;padding:.75rem 2rem;background:var(--panel);border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace;font-size:.85rem;flex-wrap:wrap}
   .status-bar .item{display:flex;gap:.5rem;align-items:center}
-  .dot{width:8px;height:8px;border-radius:50%}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
   .dot.green{background:var(--ok)}.dot.red{background:var(--accent)}.dot.gray{background:var(--fg2)}
-  main{max-width:900px;margin:2rem auto;padding:0 2rem}
+  main{max-width:960px;margin:2rem auto;padding:0 2rem}
   h2{font-family:'Share Tech Mono',monospace;color:var(--hi);font-size:1rem;letter-spacing:.1em;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--grid)}
-  .file-list{border:1px solid var(--border)}
+  .file-list{border:1px solid var(--border);min-height:60px;position:relative}
   .file-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-bottom:1px solid var(--grid);font-family:'Share Tech Mono',monospace;font-size:.85rem;transition:background .2s}
   .file-row:hover{background:var(--panel)}
   .file-row:last-child{border-bottom:none}
-  .file-path{color:var(--fg)}
+  .file-path{color:var(--fg);flex:1}
+  .file-actions{display:flex;gap:.5rem;align-items:center}
   .badge{padding:.15rem .5rem;font-size:.75rem;letter-spacing:.05em}
   .badge.synced{background:rgba(168,181,160,.15);color:var(--ok)}
   .badge.conflict{background:rgba(200,121,65,.15);color:var(--accent);font-weight:bold}
-  .badge.pending{background:rgba(176,171,152,.1);color:var(--fg2)}
-  .file-time{color:var(--fg2);font-size:.75rem}
-  .actions{display:flex;gap:.75rem;margin:1.5rem 0}
-  .btn{font-family:'Share Tech Mono',monospace;padding:.5rem 1.5rem;font-size:.85rem;letter-spacing:.08em;border:none;cursor:pointer;transition:all .2s}
-  .btn-primary{background:var(--accent);color:var(--bg)}.btn-primary:hover{background:var(--hi)}
-  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--fg)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
-  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--grid);border:1px solid var(--border);margin:1rem 0}
+  .badge.pending,.badge.modified,.badge.new{background:rgba(176,171,152,.1);color:var(--fg2)}
+  .badge.deleted{background:rgba(200,90,65,.1);color:var(--danger)}
+  .file-time{color:var(--fg2);font-size:.75rem;margin-left:.5rem}
+  .btn-icon{background:none;border:none;color:var(--fg2);cursor:pointer;font-size:.85rem;padding:.2rem .4rem;transition:color .2s}
+  .btn-icon:hover{color:var(--accent)}
+  .actions{display:flex;gap:.75rem;margin:1.5rem 0;flex-wrap:wrap;align-items:center}
+  .btn{font-family:'Share Tech Mono',monospace;padding:.5rem 1.5rem;font-size:.85rem;letter-spacing:.08em;border:none;cursor:pointer;transition:all .2s;position:relative}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:var(--bg)}.btn-primary:hover:not(:disabled){background:var(--hi)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--fg)}.btn-outline:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  .btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}.btn-danger:hover:not(:disabled){background:var(--danger);color:var(--bg)}
+  .btn-sm{padding:.3rem .8rem;font-size:.75rem}
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--grid);border:1px solid var(--border);margin:1rem 0}
   .info-cell{background:var(--bg);padding:1rem;font-family:'Share Tech Mono',monospace}
   .info-cell .label{color:var(--fg2);font-size:.75rem;letter-spacing:.1em;margin-bottom:.3rem}
   .info-cell .value{color:var(--hi);font-size:1.1rem}
   .log{background:#1a1816;border:1px solid var(--border);padding:1rem;font-family:'Share Tech Mono',monospace;font-size:.8rem;line-height:1.7;max-height:200px;overflow-y:auto;color:var(--fg2)}
-  .log .ts{color:var(--fg2)}.log .ok{color:var(--ok)}.log .warn{color:var(--accent)}
+  .log .ts{color:var(--fg2)}.log .ok{color:var(--ok)}.log .warn{color:var(--accent)}.log .err{color:var(--danger)}
   footer{text-align:center;padding:2rem;color:var(--fg2);font-size:.75rem;font-family:'Share Tech Mono',monospace;border-top:1px solid var(--grid);margin-top:3rem}
+  .empty-state{text-align:center;padding:2rem;color:var(--fg2);font-family:'Share Tech Mono',monospace;font-size:.85rem}
+  .skeleton{background:linear-gradient(90deg,var(--panel) 25%,var(--surface) 50%,var(--panel) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;height:2.5rem;border-bottom:1px solid var(--grid)}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .toast-container{position:fixed;top:1rem;right:1rem;z-index:200;display:flex;flex-direction:column;gap:.5rem}
+  .toast{padding:.75rem 1.25rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;border:1px solid var(--border);background:var(--panel);color:var(--fg);animation:slideIn .3s ease-out;max-width:360px}
+  .toast.success{border-color:var(--ok);color:var(--ok)}
+  .toast.error{border-color:var(--danger);color:var(--danger)}
+  @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .tab-bar{display:flex;gap:0;border-bottom:1px solid var(--grid);margin-bottom:1rem;flex-wrap:wrap}
+  .tab{font-family:'Share Tech Mono',monospace;font-size:.85rem;padding:.5rem 1.2rem;cursor:pointer;color:var(--fg2);border:none;background:none;border-bottom:2px solid transparent;transition:all .2s}
+  .tab:hover{color:var(--fg)}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  .form-group{margin-bottom:1rem}
+  .form-group label{display:block;font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--fg2);letter-spacing:.05em;margin-bottom:.3rem}
+  .form-group input,.form-group select{width:100%;padding:.5rem .75rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none;transition:border-color .2s}
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+  .form-group input[type="checkbox"]{width:auto;margin-right:.5rem}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .checkbox-label{display:flex;align-items:center;gap:.5rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;color:var(--fg);cursor:pointer}
+  .add-file-row{display:flex;gap:.5rem;margin:.75rem 0}
+  .add-file-row input{flex:1;padding:.4rem .6rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none}
+  .add-file-row input:focus{border-color:var(--accent)}
+  .section{margin-bottom:2rem}
+  @media(max-width:640px){
+    .form-row{grid-template-columns:1fr}
+    .info-grid{grid-template-columns:1fr 1fr}
+    .status-bar{gap:1rem;padding:.5rem 1rem}
+    main{padding:0 1rem}
+    header{padding:.75rem 1rem}
+  }
 </style>
 </head>
 <body>
 <div class="scan"></div>
+<div class="toast-container" id="toasts"></div>
 <header><span class="logo">ECHOACCESS</span><span class="ver" id="version">v0.1.2</span></header>
 <div class="status-bar">
   <div class="item"><div class="dot" id="session-dot"></div><span id="session-text">Session: ...</span></div>
@@ -55,36 +96,126 @@
   <div class="item"><div class="dot green"></div><span>Server: Running</span></div>
 </div>
 <main>
-  <h2>// SYNC STATUS</h2>
-  <div class="file-list">
-    <div class="file-row"><span class="file-path">ssh/config.base</span><span class="badge synced">synced</span><span class="file-time">2m ago</span></div>
-    <div class="file-row"><span class="file-path">ssh/id_ed25519</span><span class="badge synced">synced</span><span class="file-time">2m ago</span></div>
-    <div class="file-row"><span class="file-path">git/gitconfig.toml</span><span class="badge conflict">CONFLICT</span><span class="file-time">5m ago</span></div>
-    <div class="file-row"><span class="file-path">shell/aliases.sh</span><span class="badge pending">pending</span><span class="file-time">now</span></div>
-    <div class="file-row"><span class="file-path">vim/init.lua</span><span class="badge synced">synced</span><span class="file-time">1h ago</span></div>
-    <div class="file-row"><span class="file-path">tmux/tmux.conf</span><span class="badge synced">synced</span><span class="file-time">1h ago</span></div>
-  </div>
-  <div class="actions">
-    <button class="btn btn-primary" onclick="syncUpload()">UPLOAD</button>
-    <button class="btn btn-outline" onclick="syncDownload()">DOWNLOAD</button>
-    <button class="btn btn-outline" onclick="refresh()">REFRESH</button>
-  </div>
-
-  <h2>// OVERVIEW</h2>
-  <div class="info-grid">
-    <div class="info-cell"><div class="label">PROFILES</div><div class="value" id="profiles">0</div></div>
-    <div class="info-cell"><div class="label">SYNCED FILES</div><div class="value" id="synced">4</div></div>
-    <div class="info-cell"><div class="label">CONFLICTS</div><div class="value" id="conflicts">1</div></div>
-    <div class="info-cell"><div class="label">PENDING</div><div class="value" id="pending-count">1</div></div>
+  <div class="section">
+    <h2>// SYNC STATUS</h2>
+    <div class="file-list" id="file-list">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+    <div class="add-file-row">
+      <input type="text" id="new-file-path" placeholder="path/to/file..." />
+      <button class="btn btn-outline btn-sm" onclick="addFile()">+ ADD</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-upload" onclick="syncUpload()">UPLOAD</button>
+      <button class="btn btn-outline" id="btn-download" onclick="syncDownload()">DOWNLOAD</button>
+      <button class="btn btn-outline" onclick="refreshAll()">REFRESH</button>
+    </div>
   </div>
 
-  <h2>// ACTIVITY LOG</h2>
-  <div class="log" id="log">
-    <div><span class="ts">[--:--:--]</span> <span class="ok">Server started</span></div>
+  <div class="section">
+    <h2>// OVERVIEW</h2>
+    <div class="info-grid">
+      <div class="info-cell"><div class="label">PROFILES</div><div class="value" id="profiles">-</div></div>
+      <div class="info-cell"><div class="label">SYNCED FILES</div><div class="value" id="synced">-</div></div>
+      <div class="info-cell"><div class="label">CONFLICTS</div><div class="value" id="conflicts">-</div></div>
+      <div class="info-cell"><div class="label">PENDING</div><div class="value" id="pending-count">-</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// CONFIGURATION</h2>
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('general',this)">GENERAL</button>
+      <button class="tab" onclick="switchTab('session',this)">SESSION</button>
+      <button class="tab" onclick="switchTab('trigger',this)">TRIGGER</button>
+      <button class="tab" onclick="switchTab('cloud',this)">CLOUD</button>
+      <button class="tab" onclick="switchTab('update',this)">UPDATE</button>
+    </div>
+    <div id="tab-general" class="tab-content active">
+      <div class="form-row">
+        <div class="form-group"><label>LANGUAGE</label><input id="cfg-language" type="text" /></div>
+        <div class="form-group"><label>LOG LEVEL</label>
+          <select id="cfg-log-level"><option value="trace">trace</option><option value="debug">debug</option><option value="info">info</option><option value="warn">warn</option><option value="error">error</option></select>
+        </div>
+      </div>
+      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-start" /> AUTO START</label>
+    </div>
+    <div id="tab-session" class="tab-content">
+      <div class="form-row">
+        <div class="form-group"><label>TIMEOUT (SECONDS)</label><input id="cfg-timeout" type="number" /></div>
+        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-auto-lock" /> AUTO LOCK</label></div>
+      </div>
+    </div>
+    <div id="tab-trigger" class="tab-content">
+      <div class="form-row">
+        <div class="form-group"><label>HOTKEY</label><input id="cfg-hotkey" type="text" /></div>
+        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-on-login" /> ON LOGIN</label></div>
+      </div>
+    </div>
+    <div id="tab-cloud" class="tab-content">
+      <div class="form-group"><label>ENDPOINT</label><input id="cfg-endpoint" type="text" placeholder="https://oss.example.com" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>SYNC INTERVAL (SECONDS)</label><input id="cfg-sync-interval" type="number" /></div>
+        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-cloud-enabled" /> ENABLED</label></div>
+      </div>
+    </div>
+    <div id="tab-update" class="tab-content">
+      <div class="form-row">
+        <div class="form-group"><label>CHECK INTERVAL (HOURS)</label><input id="cfg-check-interval" type="number" /></div>
+        <div class="form-group"><label>CHANNEL</label><input id="cfg-channel" type="text" placeholder="stable" /></div>
+      </div>
+      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-check" /> AUTO CHECK</label>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveConfig()">SAVE CONFIG</button>
+      <button class="btn btn-outline" onclick="loadConfig()">RESET</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// SYNC GROUPS</h2>
+    <div id="groups-list" class="file-list"><div class="empty-state">No groups defined.</div></div>
+    <div class="add-file-row">
+      <input type="text" id="new-group-id" placeholder="group-id" style="flex:0.4" />
+      <input type="text" id="new-group-name" placeholder="Group Name" style="flex:0.6" />
+      <input type="text" id="new-group-prefix" placeholder="path/prefix/" />
+      <button class="btn btn-outline btn-sm" onclick="createGroup()">+ GROUP</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="refreshGroups()">REFRESH GROUPS</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// CONFLICTS</h2>
+    <div id="conflicts-list" class="file-list"><div class="empty-state">No conflicts.</div></div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="refreshConflicts()">REFRESH</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// SESSION</h2>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-unlock" onclick="sessionAction('unlock')">UNLOCK</button>
+      <button class="btn btn-outline" id="btn-lock" onclick="sessionAction('lock')">LOCK</button>
+      <input type="password" id="session-password" placeholder="password..." style="flex:1;padding:.4rem .6rem;font-family:'Share Tech Mono',monospace;font-size:.85rem;background:var(--panel);border:1px solid var(--border);color:var(--fg);outline:none" />
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>// ACTIVITY LOG</h2>
+    <div class="log" id="log">
+      <div><span class="ts">[--:--:--]</span> <span class="ok">Server started</span></div>
+    </div>
   </div>
 </main>
-<footer>ECHOACCESS // 127.0.0.1:9876 // <a href="https://github.com/YoRHa-Agents/EchoAccess" style="color:var(--accent);text-decoration:none">GITHUB</a></footer>
+<footer>ECHOACCESS // <span id="footer-addr">127.0.0.1:9876</span> // <a href="https://github.com/YoRHa-Agents/EchoAccess" style="color:var(--accent);text-decoration:none">GITHUB</a></footer>
 <script>
+var _loading = false;
+
 function log(msg, cls) {
   cls = cls || '';
   var el = document.getElementById('log');
@@ -92,23 +223,279 @@ function log(msg, cls) {
   el.innerHTML += '<div><span class="ts">['+t+']</span> <span class="'+cls+'">'+msg+'</span></div>';
   el.scrollTop = el.scrollHeight;
 }
-function refresh() {
-  log('Refreshing status...');
+
+function toast(msg, type) {
+  var c = document.getElementById('toasts');
+  var d = document.createElement('div');
+  d.className = 'toast ' + (type || '');
+  d.textContent = msg;
+  c.appendChild(d);
+  setTimeout(function(){ d.remove(); }, 3500);
+}
+
+function setLoading(id, loading) {
+  var btn = document.getElementById(id);
+  if (!btn) { return; }
+  btn.disabled = loading;
+  if (loading) { btn.dataset.orig = btn.textContent; btn.textContent = '...'; }
+  else if (btn.dataset.orig) { btn.textContent = btn.dataset.orig; }
+}
+
+function badgeClass(status) {
+  if (status === 'synced') { return 'synced'; }
+  if (status === 'conflict') { return 'conflict'; }
+  if (status === 'deleted') { return 'deleted'; }
+  return 'pending';
+}
+
+function renderFiles(files) {
+  var el = document.getElementById('file-list');
+  if (!files || files.length === 0) {
+    el.innerHTML = '<div class="empty-state">No tracked files. Add a file path above.</div>';
+    return;
+  }
+  var html = '';
+  files.forEach(function(f) {
+    html += '<div class="file-row">';
+    html += '<span class="file-path">' + esc(f.path) + '</span>';
+    html += '<div class="file-actions">';
+    html += '<span class="badge ' + badgeClass(f.status) + '">' + f.status + '</span>';
+    html += '<span class="file-time">' + esc(f.last_modified || '') + '</span>';
+    html += '<button class="btn-icon" onclick="removeFile(\'' + esc(f.path) + '\')" title="Remove">✕</button>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function loadConfig() {
+  fetch('/api/config').then(function(r){ return r.json(); }).then(function(c) {
+    document.getElementById('cfg-language').value = c.general.language || 'en';
+    document.getElementById('cfg-log-level').value = c.general.log_level || 'info';
+    document.getElementById('cfg-auto-start').checked = !!c.general.auto_start;
+    document.getElementById('cfg-timeout').value = c.session.timeout_secs || 300;
+    document.getElementById('cfg-auto-lock').checked = !!c.session.auto_lock;
+    document.getElementById('cfg-hotkey').value = c.trigger.hotkey || '';
+    document.getElementById('cfg-on-login').checked = !!c.trigger.on_login;
+    document.getElementById('cfg-endpoint').value = c.cloud.endpoint || '';
+    document.getElementById('cfg-sync-interval').value = c.cloud.sync_interval_secs || 60;
+    document.getElementById('cfg-cloud-enabled').checked = !!c.cloud.enabled;
+    document.getElementById('cfg-check-interval').value = c.update.check_interval_hours || 24;
+    document.getElementById('cfg-channel').value = c.update.channel || '';
+    document.getElementById('cfg-auto-check').checked = c.update.auto_check !== false;
+    log('Config loaded', 'ok');
+  }).catch(function(e){ log('Config load failed: ' + e, 'warn'); });
+}
+
+function saveConfig() {
+  var cfg = {
+    general: {
+      language: document.getElementById('cfg-language').value,
+      auto_start: document.getElementById('cfg-auto-start').checked,
+      log_level: document.getElementById('cfg-log-level').value
+    },
+    session: {
+      timeout_secs: parseInt(document.getElementById('cfg-timeout').value) || 300,
+      auto_lock: document.getElementById('cfg-auto-lock').checked
+    },
+    trigger: {
+      hotkey: document.getElementById('cfg-hotkey').value,
+      on_login: document.getElementById('cfg-on-login').checked
+    },
+    cloud: {
+      enabled: document.getElementById('cfg-cloud-enabled').checked,
+      endpoint: document.getElementById('cfg-endpoint').value,
+      sync_interval_secs: parseInt(document.getElementById('cfg-sync-interval').value) || 60
+    },
+    update: {
+      auto_check: document.getElementById('cfg-auto-check').checked,
+      check_interval_hours: parseInt(document.getElementById('cfg-check-interval').value) || 24,
+      channel: document.getElementById('cfg-channel').value
+    }
+  };
+  fetch('/api/config', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(cfg) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error) { toast(d.error, 'error'); log('Config save failed: ' + d.error, 'warn'); }
+      else { toast('Configuration saved', 'success'); log('Config saved', 'ok'); refreshStatus(); }
+    }).catch(function(e){ toast('Save failed: ' + e, 'error'); log('Config save error: ' + e, 'warn'); });
+}
+
+function refreshStatus() {
   fetch('/api/status').then(function(r){return r.json()}).then(function(d){
     document.getElementById('session-text').textContent = 'Session: ' + d.session;
     document.getElementById('cloud-text').textContent = 'Cloud: ' + d.cloud;
     document.getElementById('session-dot').className = 'dot ' + (d.session==='unlocked'?'green':'red');
     document.getElementById('cloud-dot').className = 'dot ' + (d.cloud==='connected'?'green':'gray');
-    document.getElementById('pending-count').textContent = d.pending_approvals;
-    log('Status updated', 'ok');
-  }).catch(function(e){ log('Failed: '+e, 'warn'); });
+    document.getElementById('pending-count').textContent = d.pending_files || 0;
+    document.getElementById('profiles').textContent = d.profiles_count || 0;
+    document.getElementById('synced').textContent = d.synced_files || 0;
+    document.getElementById('conflicts').textContent = d.conflicts || 0;
+  }).catch(function(e){ log('Status refresh failed: ' + e, 'warn'); });
 }
-function syncUpload() { log('Sync upload triggered...', 'ok'); }
-function syncDownload() { log('Sync download triggered...', 'ok'); }
-refresh();
+
+function refreshFiles() {
+  fetch('/api/files').then(function(r){return r.json()}).then(function(d){
+    renderFiles(d.files || []);
+  }).catch(function(e){ log('File list refresh failed: ' + e, 'warn'); });
+}
+
+function refreshAll() {
+  log('Refreshing...');
+  Promise.all([
+    refreshStatus(),
+    refreshFiles()
+  ]).then(function(){ log('Refresh complete', 'ok'); });
+}
+
+function syncUpload() {
+  setLoading('btn-upload', true);
+  log('Sync upload triggered...', 'ok');
+  fetch('/api/sync/upload', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paths:null}) })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      setLoading('btn-upload', false);
+      if (d.error) { toast(d.error, 'error'); log('Upload failed: ' + d.error, 'warn'); }
+      else { toast(d.message, 'success'); log('Upload: ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ setLoading('btn-upload', false); toast('Upload failed', 'error'); log('Upload error: ' + e, 'warn'); });
+}
+
+function syncDownload() {
+  setLoading('btn-download', true);
+  log('Sync download triggered...', 'ok');
+  fetch('/api/sync/download', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({paths:null}) })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      setLoading('btn-download', false);
+      if (d.error) { toast(d.error, 'error'); log('Download failed: ' + d.error, 'warn'); }
+      else { toast(d.message, 'success'); log('Download: ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ setLoading('btn-download', false); toast('Download failed', 'error'); log('Download error: ' + e, 'warn'); });
+}
+
+function addFile() {
+  var input = document.getElementById('new-file-path');
+  var path = input.value.trim();
+  if (!path) { toast('Enter a file path', 'error'); return; }
+  fetch('/api/files/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path}) })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if (d.status === 'exists') { toast('File already tracked', 'error'); }
+      else { toast(d.message, 'success'); log('Added: ' + path, 'ok'); input.value = ''; refreshAll(); }
+    }).catch(function(e){ toast('Add failed: ' + e, 'error'); });
+}
+
+function removeFile(path) {
+  fetch('/api/files/remove', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path}) })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      toast(d.message, 'success'); log('Removed: ' + path, 'ok'); refreshAll();
+    }).catch(function(e){ toast('Remove failed: ' + e, 'error'); });
+}
+
+function refreshGroups() {
+  fetch('/api/groups').then(function(r){return r.json()}).then(function(d){
+    var el = document.getElementById('groups-list');
+    var groups = d.groups || [];
+    if (groups.length === 0) { el.innerHTML = '<div class="empty-state">No groups defined.</div>'; return; }
+    var html = '';
+    groups.forEach(function(g) {
+      html += '<div class="file-row"><span class="file-path">' + esc(g.id) + ' — ' + esc(g.name) + '</span>';
+      html += '<div class="file-actions">';
+      html += '<span class="badge pending">' + (g.tags||[]).join(', ') + '</span>';
+      html += '<button class="btn btn-sm btn-outline" onclick="batchSync(\'' + esc(g.id) + '\')">SYNC</button>';
+      html += '<button class="btn-icon" onclick="deleteGroup(\'' + esc(g.id) + '\')" title="Delete">✕</button>';
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(e){ log('Groups refresh failed: ' + e, 'warn'); });
+}
+
+function createGroup() {
+  var id = document.getElementById('new-group-id').value.trim();
+  var name = document.getElementById('new-group-name').value.trim();
+  var prefix = document.getElementById('new-group-prefix').value.trim();
+  if (!id || !name) { toast('Group ID and name required', 'error'); return; }
+  var body = {id:id, name:name, path_prefixes: prefix ? [prefix] : []};
+  fetch('/api/groups', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); refreshGroups(); }
+      document.getElementById('new-group-id').value = '';
+      document.getElementById('new-group-name').value = '';
+      document.getElementById('new-group-prefix').value = '';
+    }).catch(function(e){ toast('Create failed: ' + e, 'error'); });
+}
+
+function deleteGroup(id) {
+  fetch('/api/groups/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})})
+    .then(function(r){return r.json()}).then(function(d){ toast(d.message, 'success'); refreshGroups(); })
+    .catch(function(e){ toast('Delete failed: ' + e, 'error'); });
+}
+
+function batchSync(groupId) {
+  fetch('/api/sync/batch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:groupId, direction:'upload'})})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log('Batch sync: ' + d.message, 'ok'); refreshAll(); }
+    }).catch(function(e){ toast('Batch sync failed: ' + e, 'error'); });
+}
+
+function refreshConflicts() {
+  fetch('/api/conflicts').then(function(r){return r.json()}).then(function(d){
+    var el = document.getElementById('conflicts-list');
+    var conflicts = d.conflicts || [];
+    if (conflicts.length === 0) { el.innerHTML = '<div class="empty-state">No conflicts.</div>'; return; }
+    var html = '';
+    conflicts.forEach(function(c) {
+      html += '<div class="file-row"><span class="file-path">' + esc(c.path) + '</span>';
+      html += '<div class="file-actions">';
+      html += '<span class="badge ' + (c.resolved ? 'synced' : 'conflict') + '">' + (c.resolved ? 'resolved' : 'unresolved') + '</span>';
+      if (!c.resolved) {
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'ours\')">OURS</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'theirs\')">THEIRS</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="resolveConflict(\'' + esc(c.path) + '\',\'base\')">BASE</button>';
+      }
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(e){ log('Conflicts refresh failed: ' + e, 'warn'); });
+}
+
+function resolveConflict(path, strategy) {
+  fetch('/api/conflicts/resolve', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path, resolution:strategy})})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast(d.message, 'success'); log('Resolved: ' + path + ' (' + strategy + ')', 'ok'); refreshConflicts(); refreshAll(); }
+    }).catch(function(e){ toast('Resolve failed: ' + e, 'error'); });
+}
+
+function sessionAction(action) {
+  var body = {action: action};
+  if (action === 'unlock') {
+    var pw = document.getElementById('session-password').value;
+    if (!pw) { toast('Password required', 'error'); return; }
+    body.password = pw;
+  }
+  fetch('/api/session', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+    .then(function(r){return r.json()}).then(function(d){
+      if (d.error) { toast(d.error, 'error'); } else { toast('Session ' + action + 'ed', 'success'); document.getElementById('session-password').value = ''; refreshStatus(); }
+    }).catch(function(e){ toast('Session action failed: ' + e, 'error'); });
+}
+
 fetch('/api/health').then(function(r){return r.json()}).then(function(h){
   if(h.version) document.getElementById('version').textContent = 'v'+h.version;
 }).catch(function(){});
+refreshStatus();
+refreshFiles();
+loadConfig();
+refreshGroups();
+refreshConflicts();
+document.getElementById('footer-addr').textContent = location.host;
 </script>
 </body>
 </html>
