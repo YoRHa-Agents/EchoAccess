@@ -1,5 +1,61 @@
 # Changelog
 
+## v0.1.4 — i18n, Theme Toggle, Auto-Update & Multi-Platform CI (2026-04-05)
+
+Feedback-driven release adding internationalization, visual customization, self-update capability, and cross-platform CI improvements.
+
+### Internationalization (i18n)
+
+- **Bilingual UI**: Full English/Chinese support with 140+ translation keys
+- **Inline translation system**: `t(key)` helper with `TRANSLATIONS` registry, `data-i18n` attributes for static text
+- **Language switcher**: EN/ZH toggle in header, persists to `localStorage` and `AppConfig.general.language`
+- **Dynamic content**: All JS-generated elements (file list, toasts, logs) use `t()` calls
+
+### Day/Night Theme Toggle
+
+- **Light theme**: Warm parchment palette under `[data-theme="light"]` CSS selector (NieR-inspired light variant)
+- **Theme toggle**: Sun/moon icon in header switches between dark and light modes
+- **Persistence**: Theme preference saved to `localStorage` and `AppConfig.general.theme`
+- **WCAG AA contrast**: Light palette designed for accessibility compliance
+
+### Cloud & Server Management
+
+- **Expanded Cloud tab**: Full management section with connection status indicator, endpoint config, sync interval
+- **Test Connection**: `POST /api/cloud/test` validates cloud backend reachability
+- **Server Info**: `GET /api/server/info` returns config path, port, version, uptime
+- **Server info panel**: Read-only display of server metadata in Cloud tab
+
+### Help Tooltips
+
+- **22 bilingual help entries**: Coverage across all 7 section headings, action buttons, and config tabs
+- **CSS tooltip component**: Pure CSS popover with hover/focus behavior, no external library
+- **Accessible**: `aria-label`, `role="tooltip"`, keyboard navigation, Escape to dismiss
+- **Mobile-friendly**: Tap-to-show on touch devices, responsive positioning
+
+### Auto-Update
+
+- **Version checking**: `echo_access update check` queries GitHub Releases API
+- **Self-update**: `echo_access update install` downloads, verifies SHA-256, extracts, and replaces binary
+- **Web API**: `GET /api/update/check` and `POST /api/update/install` endpoints
+- **Dashboard UI**: Update Status section with check/install buttons, release notes preview
+- **Platform-aware**: Automatically detects target triple and selects correct release asset
+- **Core types**: `parse_github_release()`, `get_platform_target()`, `binary_name()`, `archive_extension()`
+
+### Multi-Platform CI/CD
+
+- **Cross-OS testing**: CI matrix expanded to ubuntu-latest, macos-latest, windows-latest
+- **Windows release**: Added `x86_64-pc-windows-msvc` target (5 targets total)
+- **Cargo caching**: `actions/cache@v4` for registry, git, and target directories
+- **Build script**: `build-release.sh` now fail-fast with build summary, Windows .zip support
+
+### Dependencies Added
+
+- `sha2` 0.10 — SHA-256 checksum verification for update downloads
+- `flate2` 1 — gzip decompression for tar.gz release archives
+- `tar` 0.4 — tar archive extraction
+- `zip` 2 — zip archive extraction (Windows releases)
+- `tempfile` 3 — temporary file handling during updates
+
 ## v0.1.3 — Deep Fix & Feature Iteration (2026-04-04)
 
 Major release bridging the gap between the core library and user-facing interfaces. Web dashboard upgraded from demo to functional, TUI made interactive, CLI commands wired to real data, and new sync group management and conflict resolution capabilities added.
