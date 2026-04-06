@@ -5,6 +5,7 @@ use echoax_core::config::model::AppConfig;
 pub mod config_cmd;
 pub mod profile;
 pub mod sync;
+pub mod update;
 
 #[derive(Subcommand)]
 pub enum Commands {
@@ -32,6 +33,11 @@ pub enum Commands {
     /// Configuration management (show, path)
     #[command(subcommand)]
     Config(config_cmd::ConfigCommands),
+    /// Check for and install updates
+    Update {
+        #[command(subcommand)]
+        command: update::UpdateCommands,
+    },
 }
 
 pub async fn execute(cmd: Commands, verbose: bool) -> echoax_core::Result<()> {
@@ -95,5 +101,6 @@ pub async fn execute(cmd: Commands, verbose: bool) -> echoax_core::Result<()> {
         Commands::Sync(sub) => sync::execute(sub, verbose).await,
         Commands::Profile(sub) => profile::execute(sub).await,
         Commands::Config(sub) => config_cmd::execute(sub).await,
+        Commands::Update { command } => update::handle_update(&command).await,
     }
 }

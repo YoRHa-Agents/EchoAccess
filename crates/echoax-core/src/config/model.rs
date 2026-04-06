@@ -22,6 +22,8 @@ pub struct AppConfig {
 pub struct GeneralConfig {
     #[serde(default = "default_language")]
     pub language: String,
+    #[serde(default = "default_theme")]
+    pub theme: String,
     #[serde(default)]
     pub auto_start: bool,
     #[serde(default = "default_log_level")]
@@ -32,6 +34,10 @@ fn default_language() -> String {
     "en".to_string()
 }
 
+fn default_theme() -> String {
+    "dark".to_string()
+}
+
 fn default_log_level() -> String {
     "info".to_string()
 }
@@ -40,6 +46,7 @@ impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
             language: default_language(),
+            theme: default_theme(),
             auto_start: false,
             log_level: default_log_level(),
         }
@@ -160,6 +167,7 @@ mod tests {
         let toml_str = r#"
 [general]
 language = "zh"
+theme = "light"
 auto_start = true
 log_level = "debug"
 
@@ -183,6 +191,7 @@ check_interval_hours = 48
 "#;
         let cfg = AppConfig::from_toml_str(toml_str).unwrap();
         assert_eq!(cfg.general.language, "zh");
+        assert_eq!(cfg.general.theme, "light");
         assert!(cfg.general.auto_start);
         assert_eq!(cfg.general.log_level, "debug");
         assert_eq!(cfg.session.timeout_secs, 600);
@@ -201,6 +210,7 @@ check_interval_hours = 48
     fn deserialize_empty_uses_defaults() {
         let cfg = AppConfig::from_toml_str("").unwrap();
         assert_eq!(cfg.general.language, "en");
+        assert_eq!(cfg.general.theme, "dark");
         assert!(!cfg.general.auto_start);
         assert_eq!(cfg.general.log_level, "info");
         assert_eq!(cfg.session.timeout_secs, 300);
@@ -264,5 +274,58 @@ language = "de"
         let cfg2 = AppConfig::from_toml_str(&serialized).unwrap();
         assert_eq!(cfg.general.language, cfg2.general.language);
         assert_eq!(cfg.session.timeout_secs, cfg2.session.timeout_secs);
+    }
+
+    #[test]
+    fn general_config_default_theme_is_dark() {
+        let g = GeneralConfig::default();
+        assert_eq!(g.theme, "dark");
+    }
+
+    #[test]
+    fn general_config_serializes_theme_to_toml() {
+        let g = GeneralConfig {
+            language: "en".to_string(),
+            theme: "light".to_string(),
+            auto_start: false,
+            log_level: "info".to_string(),
+        };
+        let serialized = toml::to_string(&g).unwrap();
+        assert!(
+            serialized.contains("theme = \"light\""),
+            "expected theme in TOML: {serialized}"
+        );
+    }
+
+    #[test]
+    fn general_config_deserializes_theme_from_toml() {
+        let toml_str = r#"
+language = "en"
+theme = "light"
+auto_start = false
+log_level = "info"
+"#;
+        let g: GeneralConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(g.theme, "light");
+    }
+
+    #[test]
+    fn general_config_deserialize_without_theme_defaults_to_dark() {
+        let toml_str = r#"
+language = "fr"
+auto_start = false
+log_level = "info"
+"#;
+        let g: GeneralConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(g.theme, "dark");
+    }
+
+    #[test]
+    fn app_config_roundtrip_preserves_theme() {
+        let mut cfg = AppConfig::from_toml_str("").unwrap();
+        cfg.general.theme = "light".to_string();
+        let serialized = toml::to_string(&cfg).unwrap();
+        let cfg2 = AppConfig::from_toml_str(&serialized).unwrap();
+        assert_eq!(cfg2.general.theme, "light");
     }
 }
