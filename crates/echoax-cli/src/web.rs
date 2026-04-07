@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
-use axum::extract::State;
+use axum::extract::{Query, State};
 use axum::http::header;
 use axum::response::{Html, IntoResponse};
 use axum::routing::{get, post};
@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use tokio::sync::RwLock;
 
 use crate::commands::update::{download_and_install, fetch_update_info};
-use echoax_core::config::model::AppConfig;
+use echoax_core::config::model::{AppConfig, CloudConfig};
 use echoax_core::crypto::SessionManager;
 use echoax_core::storage::{CloudBackend, S3Backend};
 use echoax_core::sync::{
@@ -71,7 +71,7 @@ async fn api_status(State(state): State<Arc<AppState>>) -> Json<Value> {
 
     Json(json!({
         "session": if session.is_locked() { "locked" } else { "unlocked" },
-        "cloud": if config.cloud.enabled { "connected" } else { "disconnected" },
+        "cloud": cloud_status(&config),
         "sync_status": if queue.is_empty() { "idle" } else { "pending" },
         "pending_approvals": queue.list_pending().len(),
         "profiles_count": count_profiles(&state.profiles_dir),
@@ -93,6 +93,45 @@ fn count_profiles(dir: &PathBuf) -> usize {
         .unwrap_or(0)
 }
 
+fn cloud_status(config: &AppConfig) -> &'static str {
+    if !config.cloud.enabled {
+        "disabled"
+    } else if config.cloud.is_complete() {
+        "configured"
+    } else {
+        "incomplete"
+    }
+}
+
+fn cloud_missing_field_labels(fields: &[&str]) -> Vec<&'static str> {
+    fields
+        .iter()
+        .map(|field| match *field {
+            "endpoint" => "endpoint",
+            "bucket" => "bucket",
+            "access_key_id" => "access key id",
+            "secret_access_key" => "secret access key",
+            _ => "unknown",
+        })
+        .collect()
+}
+
+fn cloud_configuration_warnings(cloud: &CloudConfig) -> Vec<String> {
+    if !cloud.enabled {
+        return Vec::new();
+    }
+
+    let missing_fields = cloud.missing_required_fields();
+    if missing_fields.is_empty() {
+        return Vec::new();
+    }
+
+    vec![format!(
+        "Cloud sync is enabled but missing {}.",
+        cloud_missing_field_labels(&missing_fields).join(", ")
+    )]
+}
+
 async fn api_config_get(State(state): State<Arc<AppState>>) -> Json<Value> {
     let config = state.config.read().await;
     Json(serde_json::to_value(&*config).unwrap_or(json!({})))
@@ -102,6 +141,8 @@ async fn api_config_put(
     State(state): State<Arc<AppState>>,
     Json(new_config): Json<AppConfig>,
 ) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
+    let restart_required = state.port != new_config.general.port;
+    let warnings = cloud_configuration_warnings(&new_config.cloud);
     let serialized = toml::to_string(&new_config).map_err(|e| {
         (
             axum::http::StatusCode::BAD_REQUEST,
@@ -110,7 +151,12 @@ async fn api_config_put(
     })?;
 
     if let Some(parent) = state.config_path.parent() {
-        std::fs::create_dir_all(parent).ok();
+        std::fs::create_dir_all(parent).map_err(|e| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("Failed to prepare config directory: {e}")})),
+            )
+        })?;
     }
     std::fs::write(&state.config_path, &serialized).map_err(|e| {
         (
@@ -122,9 +168,14 @@ async fn api_config_put(
     let mut config = state.config.write().await;
     *config = new_config;
 
-    Ok(Json(
-        json!({"status": "ok", "message": "Configuration saved"}),
-    ))
+    Ok(Json(json!({
+        "status": "ok",
+        "message": "Configuration saved",
+        "restart_required": restart_required,
+        "runtime_port": state.port,
+        "configured_port": config.general.port,
+        "warnings": warnings,
+    })))
 }
 
 fn default_scan_max_depth() -> usize {
@@ -560,12 +611,13 @@ async fn api_conflicts_resolve(
 }
 
 async fn api_cloud_test(State(state): State<Arc<AppState>>) -> Json<Value> {
-    let (enabled, endpoint, bucket) = {
+    let (enabled, endpoint, bucket, missing_fields) = {
         let config = state.config.read().await;
         (
             config.cloud.enabled,
             config.cloud.endpoint.clone(),
             config.cloud.bucket.clone(),
+            config.cloud.missing_required_fields(),
         )
     };
 
@@ -573,28 +625,42 @@ async fn api_cloud_test(State(state): State<Arc<AppState>>) -> Json<Value> {
         return Json(json!({"success": false, "message": "Cloud sync is disabled"}));
     }
 
-    if endpoint.is_empty() {
-        return Json(json!({"success": false, "message": "No cloud endpoint configured"}));
-    }
-
-    if bucket.is_empty() {
-        return Json(json!({"success": false, "message": "No bucket configured"}));
+    if !missing_fields.is_empty() {
+        let labels = cloud_missing_field_labels(&missing_fields);
+        return Json(json!({
+            "success": false,
+            "message": format!(
+                "Cloud configuration incomplete: missing {}",
+                labels.join(", ")
+            ),
+            "missing_fields": missing_fields,
+        }));
     }
 
     let backend = S3Backend::new(endpoint, bucket, String::new());
     match backend.list("").await {
         Ok(_) => Json(json!({"success": true, "message": "Connection successful"})),
-        Err(e) => {
-            Json(json!({"success": false, "message": format!("Backend not yet integrated: {e}")}))
-        }
+        Err(e) => Json(json!({
+            "success": false,
+            "message": format!(
+                "Cloud storage backend is not integrated yet. Configuration looks complete, but access still fails until backend support is added: {e}"
+            ),
+        })),
     }
 }
 
 async fn api_server_info(State(state): State<Arc<AppState>>) -> Json<Value> {
     let uptime_secs = state.started_at.elapsed().as_secs();
+    let configured_port = {
+        let config = state.config.read().await;
+        config.general.port
+    };
     Json(json!({
         "config_path": state.config_path.to_string_lossy(),
         "port": state.port,
+        "runtime_port": state.port,
+        "configured_port": configured_port,
+        "port_restart_required": configured_port != state.port,
         "version": env!("CARGO_PKG_VERSION"),
         "uptime_secs": uptime_secs,
     }))
@@ -659,6 +725,33 @@ struct ExportRequest {
     passphrase: String,
 }
 
+#[derive(Deserialize, Default)]
+struct ExportPreviewRequest {
+    #[serde(default)]
+    filter: String,
+}
+
+async fn api_export_preview(
+    State(state): State<Arc<AppState>>,
+    Query(req): Query<ExportPreviewRequest>,
+) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
+    let profiles =
+        echoax_core::portability::export::preview_export_profiles(&state.profiles_dir, &req.filter)
+            .map_err(|e| {
+                (
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": format!("Failed to preview export: {e}")})),
+                )
+            })?;
+    let redacted_fields: usize = profiles.iter().map(|profile| profile.redacted_fields).sum();
+
+    Ok(Json(json!({
+        "profiles": profiles,
+        "exportable": profiles.len(),
+        "redacted_fields": redacted_fields,
+    })))
+}
+
 async fn api_export(
     State(state): State<Arc<AppState>>,
     Json(req): Json<ExportRequest>,
@@ -670,22 +763,20 @@ async fn api_export(
         ));
     }
 
-    let files = state.tracked_files.read().await;
-    let filter = req.filter.to_lowercase();
-    let filtered: Vec<&FileState> = if filter.is_empty() {
-        files.iter().collect()
-    } else {
-        files
-            .iter()
-            .filter(|f| f.path.to_lowercase().contains(&filter))
-            .collect()
-    };
+    let profiles =
+        echoax_core::portability::export::preview_export_profiles(&state.profiles_dir, &req.filter)
+            .map_err(|e| {
+                (
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": format!("Failed to prepare export: {e}")})),
+                )
+            })?;
 
-    if filtered.is_empty() {
+    if profiles.is_empty() {
         return Ok(Json(json!({
             "status": "ok",
             "exported": 0,
-            "message": "No files matched the filter",
+            "message": "No profiles matched the filter",
         })));
     }
 
@@ -696,20 +787,26 @@ async fn api_export(
         .as_secs();
     let output_path = config_dir.join(format!("export-{timestamp}.echoax.age"));
 
-    let exported_paths: Vec<String> = filtered.iter().map(|f| f.path.clone()).collect();
-    let count = exported_paths.len();
+    let exported_profiles: Vec<String> = profiles
+        .iter()
+        .map(|profile| profile.name.clone())
+        .collect();
+    let count = exported_profiles.len();
+    let redacted_fields: usize = profiles.iter().map(|profile| profile.redacted_fields).sum();
 
-    match echoax_core::portability::export::export_archive(
+    match echoax_core::portability::export::export_archive_filtered(
         &state.profiles_dir,
         &output_path,
         &req.passphrase,
+        &req.filter,
     ) {
         Ok(_manifest) => Ok(Json(json!({
             "status": "ok",
             "exported": count,
             "output_path": output_path.to_string_lossy(),
-            "files": exported_paths,
-            "message": format!("{count} file(s) exported to {}", output_path.display()),
+            "profiles": exported_profiles,
+            "redacted_fields": redacted_fields,
+            "message": format!("{count} profile(s) exported to {}", output_path.display()),
         }))),
         Err(e) => Err((
             axum::http::StatusCode::INTERNAL_SERVER_ERROR,
@@ -814,6 +911,7 @@ pub fn create_router_with_state(state: Arc<AppState>) -> Router {
         .route("/api/conflicts", get(api_conflicts_list))
         .route("/api/conflicts/resolve", post(api_conflicts_resolve))
         .route("/api/cloud/test", post(api_cloud_test))
+        .route("/api/export/preview", get(api_export_preview))
         .route("/api/export", post(api_export))
         .route("/api/server/info", get(api_server_info))
         .route("/api/update/check", get(api_update_check))
@@ -883,7 +981,15 @@ pub async fn start_server(port: u16, no_open: bool) -> echoax_core::Result<()> {
     let config_dir = dirs::config_dir().unwrap_or_default().join("echoax");
     let config_path = config_dir.join("config.toml");
     let profiles_dir = config_dir.join("profiles");
-    std::fs::create_dir_all(&profiles_dir).ok();
+    std::fs::create_dir_all(&profiles_dir).map_err(|e| {
+        echoax_core::EchoAccessError::Io(std::io::Error::new(
+            e.kind(),
+            format!(
+                "Failed to create profiles directory '{}': {e}",
+                profiles_dir.display()
+            ),
+        ))
+    })?;
 
     let config = AppConfig::load(&config_path).unwrap_or_default();
 
@@ -931,7 +1037,9 @@ mod tests {
     use super::*;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
+    use echoax_core::crypto::decrypt_file;
     use echoax_core::sync::ConflictEntry;
+    use tempfile::TempDir;
     use tower::util::ServiceExt;
 
     fn test_state() -> Arc<AppState> {
@@ -969,6 +1077,51 @@ mod tests {
         })
     }
 
+    fn test_state_with_profiles(profile_files: &[(&str, &str)]) -> (TempDir, Arc<AppState>) {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let profiles_dir = temp_dir.path().join("profiles");
+        std::fs::create_dir_all(&profiles_dir).unwrap();
+
+        for (filename, content) in profile_files {
+            std::fs::write(profiles_dir.join(filename), content).unwrap();
+        }
+
+        let mut conflict_store = ConflictStore::new();
+        conflict_store.add(ConflictEntry::new(
+            "test/conflict.txt".into(),
+            "base".into(),
+            "ours".into(),
+            "theirs".into(),
+        ));
+
+        let state = Arc::new(AppState {
+            config: RwLock::new(AppConfig::from_toml_str("").unwrap()),
+            config_path: temp_dir.path().join("config.toml"),
+            session: RwLock::new(SessionManager::new()),
+            sync_engine: SyncEngine::new(),
+            approval_queue: RwLock::new(ApprovalQueue::new()),
+            tracked_files: RwLock::new(vec![
+                {
+                    let mut f = FileState::new("test/file1.txt".into(), "abc123".into());
+                    f.status = SyncStatus::Synced;
+                    f
+                },
+                {
+                    let mut f = FileState::new("test/file2.txt".into(), "def456".into());
+                    f.status = SyncStatus::Modified;
+                    f
+                },
+            ]),
+            profiles_dir,
+            port: 9876,
+            groups: RwLock::new(GroupStore::new()),
+            conflicts: RwLock::new(conflict_store),
+            started_at: Instant::now(),
+        });
+
+        (temp_dir, state)
+    }
+
     #[tokio::test]
     async fn dashboard_returns_ok() {
         let app = create_router_with_state(test_state());
@@ -1002,6 +1155,7 @@ mod tests {
             .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["session"], "locked");
+        assert_eq!(json["cloud"], "disabled");
         assert_eq!(json["synced_files"], 1);
         assert_eq!(json["pending_files"], 1);
     }
@@ -1330,6 +1484,9 @@ mod tests {
             let mut cfg = state.config.write().await;
             cfg.cloud.enabled = true;
             cfg.cloud.endpoint.clear();
+            cfg.cloud.bucket = "test-bucket".to_string();
+            cfg.cloud.access_key_id = "AKIAIOSFODNN7EXAMPLE".to_string();
+            cfg.cloud.secret_access_key = "SECRET".to_string();
         }
         let app = create_router_with_state(state);
         let req = Request::builder()
@@ -1344,7 +1501,10 @@ mod tests {
             .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["success"], false);
-        assert_eq!(json["message"], "No cloud endpoint configured");
+        assert_eq!(
+            json["message"],
+            "Cloud configuration incomplete: missing endpoint"
+        );
     }
 
     #[tokio::test]
@@ -1355,6 +1515,8 @@ mod tests {
             cfg.cloud.enabled = true;
             cfg.cloud.endpoint = "https://s3.example.com".to_string();
             cfg.cloud.bucket.clear();
+            cfg.cloud.access_key_id = "AKIAIOSFODNN7EXAMPLE".to_string();
+            cfg.cloud.secret_access_key = "SECRET".to_string();
         }
         let app = create_router_with_state(state);
         let req = Request::builder()
@@ -1369,11 +1531,14 @@ mod tests {
             .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["success"], false);
-        assert_eq!(json["message"], "No bucket configured");
+        assert_eq!(
+            json["message"],
+            "Cloud configuration incomplete: missing bucket"
+        );
     }
 
     #[tokio::test]
-    async fn test_cloud_test_backend_not_yet_integrated() {
+    async fn test_cloud_test_no_access_key_or_secret() {
         let state = test_state();
         {
             let mut cfg = state.config.write().await;
@@ -1394,9 +1559,39 @@ mod tests {
             .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["success"], false);
+        assert_eq!(
+            json["message"],
+            "Cloud configuration incomplete: missing access key id, secret access key"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_cloud_test_backend_not_yet_integrated() {
+        let state = test_state();
+        {
+            let mut cfg = state.config.write().await;
+            cfg.cloud.enabled = true;
+            cfg.cloud.endpoint = "https://s3.example.com".to_string();
+            cfg.cloud.bucket = "test-bucket".to_string();
+            cfg.cloud.access_key_id = "AKIAIOSFODNN7EXAMPLE".to_string();
+            cfg.cloud.secret_access_key = "SECRET".to_string();
+        }
+        let app = create_router_with_state(state);
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/cloud/test")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["success"], false);
         let msg = json["message"].as_str().expect("message string");
         assert!(
-            msg.starts_with("Backend not yet integrated:"),
+            msg.starts_with("Cloud storage backend is not integrated yet."),
             "unexpected message: {msg}"
         );
     }
@@ -1420,11 +1615,138 @@ mod tests {
 
         let port = json["port"].as_u64().expect("port as u64");
         assert_eq!(port, 9876);
+        assert_eq!(json["runtime_port"], 9876);
+        assert_eq!(json["configured_port"], 9876);
+        assert_eq!(json["port_restart_required"], false);
 
         let version = json["version"].as_str().expect("version");
         assert!(!version.is_empty());
 
         // u64 guarantees non-negative; confirms JSON encodes a whole seconds count.
         let _uptime: u64 = json["uptime_secs"].as_u64().expect("uptime_secs");
+    }
+
+    #[tokio::test]
+    async fn export_preview_filters_profiles_and_counts_redactions() {
+        let (_temp_dir, state) = test_state_with_profiles(&[
+            (
+                "alpha.toml",
+                r#"
+[device]
+os = "linux"
+role = "server"
+hostname = "srv-alpha"
+
+[[sync_rules]]
+source = "ssh/config.base"
+target = "~/.ssh/config"
+masked_fields = ["password"]
+[sync_rules.field_overrides]
+password = "hunter2"
+api_key = "top-secret"
+user = "deploy"
+"#,
+            ),
+            (
+                "beta.toml",
+                r#"
+[device]
+os = "macos"
+role = "dev"
+hostname = "mac-beta"
+
+[[sync_rules]]
+source = "git/config"
+target = "~/.gitconfig"
+"#,
+            ),
+        ]);
+        let app = create_router_with_state(state);
+        let req = Request::builder()
+            .uri("/api/export/preview?filter=alpha")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        let profiles = json["profiles"].as_array().expect("profiles array");
+        assert_eq!(profiles.len(), 1);
+        assert_eq!(profiles[0]["name"], "alpha");
+        assert_eq!(profiles[0]["hostname"], "srv-alpha");
+        assert_eq!(profiles[0]["redacted_fields"], 2);
+        assert_eq!(json["redacted_fields"], 2);
+    }
+
+    #[tokio::test]
+    async fn export_uses_filtered_profiles_and_redacts_secrets() {
+        let (temp_dir, state) = test_state_with_profiles(&[
+            (
+                "alpha.toml",
+                r#"
+[device]
+os = "linux"
+role = "server"
+hostname = "srv-alpha"
+
+[[sync_rules]]
+source = "ssh/config.base"
+target = "~/.ssh/config"
+masked_fields = ["password"]
+[sync_rules.field_overrides]
+password = "hunter2"
+api_key = "top-secret"
+user = "deploy"
+"#,
+            ),
+            (
+                "beta.toml",
+                r#"
+[device]
+os = "linux"
+role = "edge"
+hostname = "srv-beta"
+
+[[sync_rules]]
+source = "shell/aliases.sh"
+target = "~/.aliases"
+"#,
+            ),
+        ]);
+        let app = create_router_with_state(state);
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/export")
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"filter":"alpha","passphrase":"test-passphrase"}"#,
+            ))
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["exported"], 1);
+        assert_eq!(json["redacted_fields"], 2);
+        let output_path = json["output_path"].as_str().expect("output_path");
+        let encrypted = std::fs::read(output_path).unwrap();
+        let decrypted = decrypt_file(&encrypted, "test-passphrase").unwrap();
+        let archive = String::from_utf8(decrypted).unwrap();
+
+        assert!(archive.contains("\"name\": \"alpha\""));
+        assert!(archive.contains("srv-alpha"));
+        assert!(!archive.contains("srv-beta"));
+        assert!(!archive.contains("hunter2"));
+        assert!(!archive.contains("top-secret"));
+        assert!(archive.contains("[REDACTED]"));
+
+        let _ = std::fs::remove_file(output_path);
+        drop(temp_dir);
     }
 }

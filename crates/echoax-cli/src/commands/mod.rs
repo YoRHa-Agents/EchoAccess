@@ -71,16 +71,20 @@ pub async fn execute(cmd: Commands, verbose: bool) -> echoax_core::Result<()> {
 
             println!("EchoAccess v{}", env!("CARGO_PKG_VERSION"));
             println!("Session  : Locked");
+            let missing_cloud_fields = config.cloud.missing_required_fields();
             println!(
                 "Cloud    : {}",
-                if config.cloud.enabled {
-                    format!("Connected ({})", config.cloud.endpoint)
+                if !config.cloud.enabled {
+                    "Disabled".to_string()
+                } else if missing_cloud_fields.is_empty() {
+                    format!("Configured ({})", config.cloud.endpoint)
                 } else {
-                    "Disconnected".to_string()
+                    format!("Incomplete (missing {})", missing_cloud_fields.join(", "))
                 }
             );
             if verbose {
                 println!("Config   : {}", config_dir.display());
+                println!("Web UI   : http://127.0.0.1:{}", config.general.port);
                 println!("Language : {}", config.general.language);
                 println!("Log Level: {}", config.general.log_level);
                 let profiles_dir = config_dir.join("profiles");

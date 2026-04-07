@@ -138,6 +138,31 @@ impl Default for CloudConfig {
     }
 }
 
+impl CloudConfig {
+    pub fn missing_required_fields(&self) -> Vec<&'static str> {
+        let mut fields = Vec::new();
+
+        if self.endpoint.trim().is_empty() {
+            fields.push("endpoint");
+        }
+        if self.bucket.trim().is_empty() {
+            fields.push("bucket");
+        }
+        if self.access_key_id.trim().is_empty() {
+            fields.push("access_key_id");
+        }
+        if self.secret_access_key.trim().is_empty() {
+            fields.push("secret_access_key");
+        }
+
+        fields
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.missing_required_fields().is_empty()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfig {
     #[serde(default = "default_true")]
@@ -261,6 +286,24 @@ language = "fr"
         assert_eq!(cfg.general.language, "fr");
         assert!(!cfg.general.auto_start);
         assert_eq!(cfg.session.timeout_secs, 300);
+    }
+
+    #[test]
+    fn cloud_config_reports_missing_required_fields() {
+        let mut cloud = CloudConfig::default();
+        assert_eq!(
+            cloud.missing_required_fields(),
+            vec!["endpoint", "bucket", "access_key_id", "secret_access_key"]
+        );
+        assert!(!cloud.is_complete());
+
+        cloud.endpoint = "https://s3.example.com".into();
+        cloud.bucket = "echoax".into();
+        cloud.access_key_id = "AKIAIOSFODNN7EXAMPLE".into();
+        cloud.secret_access_key = "SECRET".into();
+
+        assert!(cloud.missing_required_fields().is_empty());
+        assert!(cloud.is_complete());
     }
 
     #[test]

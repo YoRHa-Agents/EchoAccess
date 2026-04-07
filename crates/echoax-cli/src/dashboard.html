@@ -144,7 +144,7 @@
       <button class="lang-btn" data-lang="zh" onclick="switchLanguage('zh')">ZH</button>
     </div>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">&#9728;</button>
-    <span class="ver" id="version">v0.1.2</span>
+    <span class="ver" id="version">v0.1.5</span>
   </div>
 </header>
 <div class="status-bar">
@@ -223,14 +223,14 @@
         <div>
           <div class="panel-title" data-i18n="cloud_configuration">CLOUD CONFIGURATION</div>
           <label class="checkbox-label"><input type="checkbox" id="cfg-cloud-enabled" onchange="updateCloudDot()" /> <span data-i18n="lbl_cloud_enabled">CLOUD SYNC ENABLED</span></label>
-          <div class="form-group" style="margin-top:1rem"><label data-i18n="lbl_endpoint">ENDPOINT URL</label><input id="cfg-endpoint" type="text" data-i18n-ph="ph_endpoint" placeholder="https://s3.example.com" /></div>
+          <div class="form-group" style="margin-top:1rem"><label data-i18n="lbl_endpoint">ENDPOINT URL</label><input id="cfg-endpoint" type="text" data-i18n-ph="ph_endpoint" placeholder="https://s3.example.com" oninput="updateCloudDot()" /></div>
           <div class="form-row">
             <div class="form-group"><label data-i18n="lbl_region">REGION</label><input id="cfg-region" type="text" data-i18n-ph="ph_region" placeholder="us-east-1" /></div>
-            <div class="form-group"><label data-i18n="lbl_bucket">BUCKET</label><input id="cfg-bucket" type="text" data-i18n-ph="ph_bucket" placeholder="my-bucket" /></div>
+            <div class="form-group"><label data-i18n="lbl_bucket">BUCKET</label><input id="cfg-bucket" type="text" data-i18n-ph="ph_bucket" placeholder="my-bucket" oninput="updateCloudDot()" /></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label data-i18n="lbl_access_key">ACCESS KEY ID</label><input id="cfg-access-key" type="text" data-i18n-ph="ph_access_key" placeholder="AKIAIOSFODNN7EXAMPLE" /></div>
-            <div class="form-group"><label data-i18n="lbl_secret_key">SECRET ACCESS KEY</label><input id="cfg-secret-key" type="password" data-i18n-ph="ph_secret_key" placeholder="********" /></div>
+            <div class="form-group"><label data-i18n="lbl_access_key">ACCESS KEY ID</label><input id="cfg-access-key" type="text" data-i18n-ph="ph_access_key" placeholder="AKIAIOSFODNN7EXAMPLE" oninput="updateCloudDot()" /></div>
+            <div class="form-group"><label data-i18n="lbl_secret_key">SECRET ACCESS KEY</label><input id="cfg-secret-key" type="password" data-i18n-ph="ph_secret_key" placeholder="********" oninput="updateCloudDot()" /></div>
           </div>
           <div class="form-group"><label data-i18n="lbl_sync_interval">SYNC INTERVAL (SECONDS)</label><input id="cfg-sync-interval" type="number" /></div>
           <div style="margin-top:1rem">
@@ -241,7 +241,9 @@
           <div class="panel-title" data-i18n="cloud_server_info">SERVER INFO</div>
           <div class="info-grid" style="margin-top:0">
             <div class="info-cell"><div class="label" data-i18n="info_config_path">CONFIG PATH</div><div class="value" id="srv-config-path" style="font-size:.8rem;word-break:break-all">-</div></div>
-            <div class="info-cell"><div class="label" data-i18n="info_port">PORT</div><div class="value" id="srv-port">-</div></div>
+            <div class="info-cell"><div class="label" data-i18n="info_runtime_port">RUNTIME PORT</div><div class="value" id="srv-runtime-port">-</div></div>
+            <div class="info-cell"><div class="label" data-i18n="info_configured_port">CONFIGURED PORT</div><div class="value" id="srv-configured-port">-</div></div>
+            <div class="info-cell"><div class="label" data-i18n="info_port_status">PORT STATUS</div><div class="value" id="srv-port-status">-</div></div>
             <div class="info-cell"><div class="label" data-i18n="info_version">VERSION</div><div class="value" id="srv-version">-</div></div>
             <div class="info-cell"><div class="label" data-i18n="info_uptime">UPTIME</div><div class="value" id="srv-uptime">-</div></div>
           </div>
@@ -306,11 +308,11 @@
   <div class="section">
     <h2><span data-i18n="sec_export">// EXPORT</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="export"></span></span></h2>
     <div class="add-file-row">
-      <input type="text" id="export-filter" data-i18n-ph="ph_export_filter" placeholder="Filter files by path..." style="flex:1" />
+      <input type="text" id="export-filter" data-i18n-ph="ph_export_filter" placeholder="Filter profiles by name, host, role, or rule..." style="flex:1" />
       <button class="btn btn-outline btn-sm" id="btn-export-preview" onclick="previewExport()" data-i18n="btn_export_preview">PREVIEW</button>
     </div>
     <div class="file-list" id="export-preview-list" style="max-height:180px;overflow-y:auto">
-      <div class="empty-state" data-i18n="empty_export_preview">Enter a filter and click PREVIEW to see matching files.</div>
+      <div class="empty-state" data-i18n="empty_export_preview">Enter a filter and click PREVIEW to see matching profiles.</div>
     </div>
     <div class="add-file-row" style="margin-top:.75rem">
       <input type="password" id="export-passphrase" data-i18n-ph="ph_export_passphrase" placeholder="Encryption passphrase..." style="flex:1" />
@@ -382,12 +384,17 @@ var TRANSLATIONS = {
   info_pending:{en:'PENDING',zh:'待处理'},
   info_config_path:{en:'CONFIG PATH',zh:'配置路径'},
   info_port:{en:'PORT',zh:'端口'},
+  info_runtime_port:{en:'RUNTIME PORT',zh:'运行端口'},
+  info_configured_port:{en:'CONFIGURED PORT',zh:'配置端口'},
+  info_port_status:{en:'PORT STATUS',zh:'端口状态'},
   info_version:{en:'VERSION',zh:'版本'},
   info_uptime:{en:'UPTIME',zh:'运行时间'},
   cloud_configuration:{en:'CLOUD CONFIGURATION',zh:'云端配置'},
   cloud_server_info:{en:'SERVER INFO',zh:'服务器信息'},
   cloud_checking:{en:'Cloud: checking...',zh:'云端: 检查中...'},
   cloud_enabled:{en:'Cloud: enabled',zh:'云端: 已启用'},
+  cloud_configured:{en:'Cloud: configured',zh:'云端: 已配置'},
+  cloud_incomplete:{en:'Cloud: incomplete',zh:'云端: 配置不完整'},
   cloud_disabled:{en:'Cloud: disabled',zh:'云端: 已禁用'},
   status_server_running:{en:'Server: Running',zh:'服务器: 运行中'},
   status_session:{en:'Session',zh:'会话'},
@@ -404,7 +411,12 @@ var TRANSLATIONS = {
   status_unlocked:{en:'unlocked',zh:'已解锁'},
   status_connected:{en:'connected',zh:'已连接'},
   status_disconnected:{en:'disconnected',zh:'未连接'},
+  status_configured:{en:'configured',zh:'已配置'},
+  status_incomplete:{en:'incomplete',zh:'不完整'},
+  status_disabled:{en:'disabled',zh:'已禁用'},
   status_idle:{en:'idle',zh:'空闲'},
+  label_rules:{en:'RULES',zh:'规则'},
+  label_redacted:{en:'REDACTED',zh:'已清理'},
   empty_no_files:{en:'No tracked files. Add a file path above.',zh:'暂无跟踪文件。请在上方添加文件路径。'},
   empty_no_groups:{en:'No groups defined.',zh:'暂无分组。'},
   empty_no_conflicts:{en:'No conflicts.',zh:'暂无冲突。'},
@@ -419,9 +431,10 @@ var TRANSLATIONS = {
   ph_access_key:{en:'AKIAIOSFODNN7EXAMPLE',zh:'AKIAIOSFODNN7EXAMPLE'},
   ph_secret_key:{en:'********',zh:'********'},
   ph_channel:{en:'stable',zh:'stable'},
-  ph_export_filter:{en:'Filter files by path...',zh:'按路径过滤文件...'},
+  ph_export_filter:{en:'Filter profiles by name, host, role, or rule...',zh:'按名称、主机、角色或规则过滤配置文件...'},
   ph_export_passphrase:{en:'Encryption passphrase...',zh:'加密密码...'},
   msg_config_saved:{en:'Configuration saved',zh:'配置已保存'},
+  msg_port_restart_required:{en:'Restart EchoAccess to apply the new web port.',zh:'请重启 EchoAccess 以应用新的 Web 端口。'},
   msg_config_loaded:{en:'Config loaded',zh:'配置已加载'},
   msg_config_load_failed:{en:'Config load failed',zh:'配置加载失败'},
   msg_config_save_failed:{en:'Config save failed',zh:'配置保存失败'},
@@ -464,15 +477,17 @@ var TRANSLATIONS = {
   msg_session_failed:{en:'Session action failed',zh:'会话操作失败'},
   btn_export_preview:{en:'PREVIEW',zh:'预览'},
   btn_export:{en:'EXPORT',zh:'导出'},
-  empty_export_preview:{en:'Enter a filter and click PREVIEW to see matching files.',zh:'输入过滤条件并点击预览查看匹配文件。'},
+  empty_export_preview:{en:'Enter a filter and click PREVIEW to see matching profiles.',zh:'输入过滤条件并点击预览查看匹配配置文件。'},
   msg_export_success:{en:'Export successful',zh:'导出成功'},
   msg_export_failed:{en:'Export failed',zh:'导出失败'},
-  msg_export_no_match:{en:'No files matched the filter',zh:'没有文件匹配过滤条件'},
+  msg_export_no_match:{en:'No profiles matched the filter',zh:'没有配置文件匹配过滤条件'},
   msg_passphrase_required:{en:'Passphrase required',zh:'需要加密密码'},
   msg_server_started:{en:'Server started',zh:'服务器已启动'},
   msg_now_tracking:{en:'Now tracking',zh:'开始跟踪'},
   msg_lang_changed:{en:'Language changed',zh:'语言已切换'},
   msg_theme_changed:{en:'Theme changed',zh:'主题已切换'},
+  port_status_live:{en:'LIVE',zh:'生效中'},
+  port_status_restart_required:{en:'RESTART REQUIRED',zh:'需要重启'},
   update_status_section:{en:'UPDATE STATUS',zh:'更新状态'},
   update_check:{en:'Check for Updates',zh:'检查更新'},
   update_checking:{en:'Checking...',zh:'检查中...'},
@@ -566,8 +581,8 @@ var HELP_TEXTS = {
     zh: '触发设置：打开 EchoAccess 的全局热键，以及是否在系统登录时触发同步。'
   },
   'tab-cloud': {
-    en: 'Cloud sync settings: enable/disable cloud synchronization, configure the storage endpoint URL, and set the sync interval.',
-    zh: '云端同步设置：启用/禁用云端同步，配置存储端点 URL，以及设置同步间隔。'
+    en: 'Cloud sync settings: enable or disable synchronization, configure the endpoint, bucket, and credentials, then verify whether the configuration is complete.',
+    zh: '云端同步设置：启用或禁用同步，配置端点、存储桶和凭证，并验证配置是否完整。'
   },
   'tab-update': {
     en: 'Update settings: automatic update checking, check interval, and release channel selection.',
@@ -586,12 +601,12 @@ var HELP_TEXTS = {
     zh: 'Web UI 服务器的端口号。下次重启后生效。默认值：9876。'
   },
   'export': {
-    en: 'Export tracked files as an encrypted archive. Use the filter to select specific files by path keyword.',
-    zh: '将跟踪的文件导出为加密归档。使用过滤器按路径关键字选择特定文件。'
+    en: 'Export matching device profiles as an encrypted archive. The filter searches profile metadata and sync rules, and secret override values are redacted before export.',
+    zh: '将匹配的设备配置文件导出为加密归档。过滤器会搜索配置文件元数据和同步规则，并在导出前清理敏感覆盖值。'
   },
   'btn-export': {
-    en: 'Export the filtered files as an age-encrypted archive. Requires a passphrase for encryption.',
-    zh: '将过滤后的文件导出为 age 加密归档。需要加密密码。'
+    en: 'Export the filtered profiles as an age-encrypted archive. Requires a passphrase and automatically redacts secret override values.',
+    zh: '将过滤后的配置文件导出为 age 加密归档。需要加密密码，并会自动清理敏感覆盖值。'
   }
 };
 
@@ -859,6 +874,28 @@ function loadConfig() {
   }).catch(function(e){ log(t('msg_config_load_failed') + ': ' + e, 'warn'); });
 }
 
+function cloudFormMissingFields() {
+  var missing = [];
+  if (!document.getElementById('cfg-endpoint').value.trim()) { missing.push('lbl_endpoint'); }
+  if (!document.getElementById('cfg-bucket').value.trim()) { missing.push('lbl_bucket'); }
+  if (!document.getElementById('cfg-access-key').value.trim()) { missing.push('lbl_access_key'); }
+  if (!document.getElementById('cfg-secret-key').value.trim()) { missing.push('lbl_secret_key'); }
+  return missing;
+}
+
+function cloudFormState() {
+  if (!document.getElementById('cfg-cloud-enabled').checked) {
+    return 'disabled';
+  }
+  return cloudFormMissingFields().length === 0 ? 'configured' : 'incomplete';
+}
+
+function cloudDotClass(state) {
+  if (state === 'configured') { return 'green'; }
+  if (state === 'incomplete') { return 'red'; }
+  return 'gray';
+}
+
 function saveConfig() {
   var cfg = {
     general: {
@@ -895,7 +932,23 @@ function saveConfig() {
     .then(function(r){ return r.json(); })
     .then(function(d){
       if (d.error) { toast(d.error, 'error'); log(t('msg_config_save_failed') + ': ' + d.error, 'warn'); }
-      else { toast(t('msg_config_saved'), 'success'); log(t('msg_config_saved'), 'ok'); refreshStatus(); updateCloudDot(); }
+      else {
+        toast(t('msg_config_saved'), 'success');
+        log(t('msg_config_saved'), 'ok');
+        if (Array.isArray(d.warnings)) {
+          d.warnings.forEach(function(warning) {
+            showToast(warning, 'warn');
+            log(warning, 'warn');
+          });
+        }
+        if (d.restart_required) {
+          showToast(t('msg_port_restart_required'), 'warn');
+          log(t('msg_port_restart_required'), 'warn');
+        }
+        refreshStatus();
+        loadServerInfo();
+        updateCloudDot();
+      }
     }).catch(function(e){ toast(t('msg_save_failed') + ': ' + e, 'error'); log(t('msg_save_failed') + ': ' + e, 'warn'); });
 }
 
@@ -904,7 +957,7 @@ function refreshStatus() {
     document.getElementById('session-text').textContent = t('status_session') + ': ' + t('status_' + d.session);
     document.getElementById('cloud-text').textContent = t('status_cloud') + ': ' + t('status_' + d.cloud);
     document.getElementById('session-dot').className = 'dot ' + (d.session==='unlocked'?'green':'red');
-    document.getElementById('cloud-dot').className = 'dot ' + (d.cloud==='connected'?'green':'gray');
+    document.getElementById('cloud-dot').className = 'dot ' + cloudDotClass(d.cloud);
     document.getElementById('pending-count').textContent = d.pending_files || 0;
     document.getElementById('profiles').textContent = d.profiles_count || 0;
     document.getElementById('synced').textContent = d.synced_files || 0;
@@ -1060,7 +1113,9 @@ function sessionAction(action) {
 function loadServerInfo() {
   fetch('/api/server/info').then(function(r){ return r.json(); }).then(function(d) {
     document.getElementById('srv-config-path').textContent = d.config_path || '-';
-    document.getElementById('srv-port').textContent = d.port || '-';
+    document.getElementById('srv-runtime-port').textContent = d.runtime_port || d.port || '-';
+    document.getElementById('srv-configured-port').textContent = d.configured_port || d.port || '-';
+    document.getElementById('srv-port-status').textContent = d.port_restart_required ? t('port_status_restart_required') : t('port_status_live');
     document.getElementById('srv-version').textContent = d.version ? 'v' + d.version : '-';
     setUpdateTabVersion(d.version);
     var secs = d.uptime_secs || 0;
@@ -1093,19 +1148,26 @@ function testCloudConnection() {
 }
 
 function previewExport() {
-  var filter = document.getElementById('export-filter').value.trim().toLowerCase();
-  fetch('/api/files').then(function(r){return r.json()}).then(function(d){
-    var files = d.files || [];
-    var filtered = filter ? files.filter(function(f){ return f.path.toLowerCase().indexOf(filter) !== -1; }) : files;
+  var filter = document.getElementById('export-filter').value.trim();
+  fetch('/api/export/preview?filter=' + encodeURIComponent(filter)).then(function(r){return r.json()}).then(function(d){
+    var profiles = d.profiles || [];
     var el = document.getElementById('export-preview-list');
-    if (filtered.length === 0) {
+    if (profiles.length === 0) {
       el.innerHTML = '<div class="empty-state">' + t('msg_export_no_match') + '</div>';
       return;
     }
     var html = '';
-    filtered.forEach(function(f) {
-      html += '<div class="file-row"><span class="file-path">' + esc(f.path) + '</span>';
-      html += '<span class="badge ' + badgeClass(f.status) + '">' + t('status_' + f.status) + '</span>';
+    profiles.forEach(function(profile) {
+      html += '<div class="file-row"><div style="flex:1">';
+      html += '<div class="file-path">' + esc(profile.name) + '.toml</div>';
+      html += '<div class="file-time">' + esc((profile.hostname || '-') + ' · ' + (profile.os || '-') + ' / ' + (profile.role || '-')) + '</div>';
+      html += '</div>';
+      html += '<div class="file-actions">';
+      html += '<span class="badge pending">' + esc(String(profile.rules_count || 0)) + ' ' + esc(t('label_rules')) + '</span>';
+      if ((profile.redacted_fields || 0) > 0) {
+        html += '<span class="badge conflict">' + esc(String(profile.redacted_fields)) + ' ' + esc(t('label_redacted')) + '</span>';
+      }
+      html += '</div>';
       html += '</div>';
     });
     el.innerHTML = html;
@@ -1133,13 +1195,18 @@ function doExport() {
 }
 
 function updateCloudDot() {
-  var enabled = document.getElementById('cfg-cloud-enabled').checked;
+  var state = cloudFormState();
   var dot = document.getElementById('cloud-cfg-dot');
   var status = document.getElementById('cloud-cfg-status');
-  dot.className = 'dot ' + (enabled ? 'green' : 'gray');
-  var key = enabled ? 'cloud_enabled' : 'cloud_disabled';
+  var key = state === 'configured' ? 'cloud_configured' : (state === 'incomplete' ? 'cloud_incomplete' : 'cloud_disabled');
+  dot.className = 'dot ' + cloudDotClass(state);
   status.setAttribute('data-i18n', key);
-  status.textContent = t(key);
+  if (state === 'incomplete') {
+    var missing = cloudFormMissingFields().map(function(fieldKey){ return t(fieldKey); }).join(', ');
+    status.textContent = t(key) + ' — ' + missing;
+  } else {
+    status.textContent = t(key);
+  }
 }
 
 applyTranslations();
