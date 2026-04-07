@@ -28,6 +28,12 @@ pub struct GeneralConfig {
     pub auto_start: bool,
     #[serde(default = "default_log_level")]
     pub log_level: String,
+    #[serde(default = "default_port")]
+    pub port: u16,
+}
+
+fn default_port() -> u16 {
+    9876
 }
 
 fn default_language() -> String {
@@ -49,6 +55,7 @@ impl Default for GeneralConfig {
             theme: default_theme(),
             auto_start: false,
             log_level: default_log_level(),
+            port: default_port(),
         }
     }
 }
@@ -101,6 +108,14 @@ pub struct CloudConfig {
     pub enabled: bool,
     #[serde(default)]
     pub endpoint: String,
+    #[serde(default)]
+    pub region: String,
+    #[serde(default)]
+    pub bucket: String,
+    #[serde(default)]
+    pub access_key_id: String,
+    #[serde(default)]
+    pub secret_access_key: String,
     #[serde(default = "default_sync_interval_secs")]
     pub sync_interval_secs: u64,
 }
@@ -114,6 +129,10 @@ impl Default for CloudConfig {
         Self {
             enabled: false,
             endpoint: String::new(),
+            region: String::new(),
+            bucket: String::new(),
+            access_key_id: String::new(),
+            secret_access_key: String::new(),
             sync_interval_secs: default_sync_interval_secs(),
         }
     }
@@ -182,6 +201,10 @@ on_login = true
 [cloud]
 enabled = true
 endpoint = "https://api.example.com"
+region = "us-west-2"
+bucket = "my-configs"
+access_key_id = "AKID"
+secret_access_key = "SECRET"
 sync_interval_secs = 120
 
 [update]
@@ -200,6 +223,10 @@ check_interval_hours = 48
         assert!(cfg.trigger.on_login);
         assert!(cfg.cloud.enabled);
         assert_eq!(cfg.cloud.endpoint, "https://api.example.com");
+        assert_eq!(cfg.cloud.region, "us-west-2");
+        assert_eq!(cfg.cloud.bucket, "my-configs");
+        assert_eq!(cfg.cloud.access_key_id, "AKID");
+        assert_eq!(cfg.cloud.secret_access_key, "SECRET");
         assert_eq!(cfg.cloud.sync_interval_secs, 120);
         assert!(!cfg.update.auto_check);
         assert_eq!(cfg.update.channel, "beta");
@@ -217,6 +244,7 @@ check_interval_hours = 48
         assert!(!cfg.session.auto_lock);
         assert_eq!(cfg.trigger.hotkey, "Ctrl+Shift+E");
         assert!(!cfg.trigger.on_login);
+        assert_eq!(cfg.general.port, 9876);
         assert!(!cfg.cloud.enabled);
         assert_eq!(cfg.cloud.sync_interval_secs, 60);
         assert!(cfg.update.auto_check);
@@ -289,6 +317,7 @@ language = "de"
             theme: "light".to_string(),
             auto_start: false,
             log_level: "info".to_string(),
+            port: 9876,
         };
         let serialized = toml::to_string(&g).unwrap();
         assert!(

@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.1.5 — Port Management, Cloud Config & Export Filter (2026-04-07)
+
+Feedback-driven release addressing v0.1.4 review: web UI port management, complete cloud configuration, and export with search/filter.
+
+### Port Management
+
+- **Configurable port**: `general.port` field in `config.toml` (default: 9876)
+- **UI control**: Port input in General settings tab with help tooltip
+- **Config-driven startup**: Server reads port from config on launch instead of hardcoded value
+
+### Cloud Configuration (Complete)
+
+- **4 new fields**: `region`, `bucket`, `access_key_id`, `secret_access_key` added to `CloudConfig`
+- **Full cloud form**: Cloud tab now shows endpoint, region, bucket, access key, and secret key inputs
+- **Validation**: Cloud test endpoint validates bucket is configured before attempting connection
+- **Secret masking**: Secret access key uses password input type
+
+### Export with Search/Filter
+
+- **Export section**: New UI section with search filter, preview, and encrypted export
+- **Filter preview**: `PREVIEW` button shows matching files before export
+- **Path filter**: Filter tracked files by path keyword (case-insensitive)
+- **Encrypted export**: `POST /api/export` with passphrase and optional filter
+- **Bilingual**: Full EN/ZH translations for all export UI elements
+
+### Tests
+
+- **158 tests passing** (up from 155)
+- Added cloud test with no bucket validation test
+- Updated existing config tests for new fields
+
 ## v0.1.4 — i18n, Theme Toggle, Auto-Update & Multi-Platform CI (2026-04-05)
 
 Feedback-driven release adding internationalization, visual customization, self-update capability, and cross-platform CI improvements.

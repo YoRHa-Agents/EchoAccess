@@ -28,7 +28,14 @@ async fn main() {
     let cli = Cli::parse();
 
     let result = match cli.command {
-        None => web::start_server(9876, false).await,
+        None => {
+            let config_dir = dirs::config_dir().unwrap_or_default().join("echoax");
+            let config_path = config_dir.join("config.toml");
+            let port = echoax_core::config::model::AppConfig::load(&config_path)
+                .map(|c| c.general.port)
+                .unwrap_or(9876);
+            web::start_server(port, false).await
+        }
         Some(cmd) => commands::execute(cmd, cli.verbose).await,
     };
 
