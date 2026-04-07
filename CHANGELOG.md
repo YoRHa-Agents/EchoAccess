@@ -7,29 +7,30 @@ Feedback-driven release addressing v0.1.4 review: web UI port management, comple
 ### Port Management
 
 - **Configurable port**: `general.port` field in `config.toml` (default: 9876)
-- **UI control**: Port input in General settings tab with help tooltip
+- **Runtime vs configured port**: Server info now shows both the live port and the saved port value
+- **Restart awareness**: Saving a new port warns that the change takes effect on the next restart
 - **Config-driven startup**: Server reads port from config on launch instead of hardcoded value
 
 ### Cloud Configuration (Complete)
 
-- **4 new fields**: `region`, `bucket`, `access_key_id`, `secret_access_key` added to `CloudConfig`
-- **Full cloud form**: Cloud tab now shows endpoint, region, bucket, access key, and secret key inputs
-- **Validation**: Cloud test endpoint validates bucket is configured before attempting connection
-- **Secret masking**: Secret access key uses password input type
+- **Completeness checks**: Cloud config now validates `endpoint`, `bucket`, `access_key_id`, and `secret_access_key`
+- **Accurate cloud state**: Web status now distinguishes `disabled`, `incomplete`, and `configured`
+- **Clear test feedback**: Cloud test reports missing fields up front and explains that backend access is not integrated yet
+- **Docs sync**: Configuration docs now show the full endpoint/bucket/credential shape instead of endpoint-only examples
 
 ### Export with Search/Filter
 
-- **Export section**: New UI section with search filter, preview, and encrypted export
-- **Filter preview**: `PREVIEW` button shows matching files before export
-- **Path filter**: Filter tracked files by path keyword (case-insensitive)
-- **Encrypted export**: `POST /api/export` with passphrase and optional filter
-- **Bilingual**: Full EN/ZH translations for all export UI elements
+- **Profile-based preview**: Export preview now searches device profiles instead of unrelated tracked file state
+- **Aligned export filtering**: `POST /api/export` exports the same filtered profiles shown in preview
+- **Secret redaction**: Sensitive profile override values are redacted before archive encryption
+- **Legacy-safe fallback**: Export still supports unstructured TOML by falling back to raw profile content when needed
+- **Bilingual updates**: EN/ZH dashboard copy now reflects profile filtering, redaction, and cloud completeness status
 
 ### Tests
 
-- **158 tests passing** (up from 155)
-- Added cloud test with no bucket validation test
-- Updated existing config tests for new fields
+- **164 tests passing** (up from 155)
+- Added cloud completeness, export preview, and secret-redaction coverage
+- Preserved portability tests by keeping export compatibility with legacy TOML inputs
 
 ## v0.1.4 — i18n, Theme Toggle, Auto-Update & Multi-Platform CI (2026-04-05)
 
