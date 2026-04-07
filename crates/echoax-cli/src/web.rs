@@ -560,9 +560,13 @@ async fn api_conflicts_resolve(
 }
 
 async fn api_cloud_test(State(state): State<Arc<AppState>>) -> Json<Value> {
-    let (enabled, endpoint) = {
+    let (enabled, endpoint, bucket) = {
         let config = state.config.read().await;
-        (config.cloud.enabled, config.cloud.endpoint.clone())
+        (
+            config.cloud.enabled,
+            config.cloud.endpoint.clone(),
+            config.cloud.bucket.clone(),
+        )
     };
 
     if !enabled {
@@ -573,7 +577,11 @@ async fn api_cloud_test(State(state): State<Arc<AppState>>) -> Json<Value> {
         return Json(json!({"success": false, "message": "No cloud endpoint configured"}));
     }
 
-    let backend = S3Backend::new(endpoint, String::new(), String::new());
+    if bucket.is_empty() {
+        return Json(json!({"success": false, "message": "No bucket configured"}));
+    }
+
+    let backend = S3Backend::new(endpoint, bucket, String::new());
     match backend.list("").await {
         Ok(_) => Json(json!({"success": true, "message": "Connection successful"})),
         Err(e) => {
@@ -641,6 +649,72 @@ async fn api_update_install() -> Json<Value> {
             "success": false,
             "message": format!("{e}"),
         })),
+    }
+}
+
+#[derive(Deserialize)]
+struct ExportRequest {
+    #[serde(default)]
+    filter: String,
+    passphrase: String,
+}
+
+async fn api_export(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<ExportRequest>,
+) -> Result<Json<Value>, (axum::http::StatusCode, Json<Value>)> {
+    if req.passphrase.is_empty() {
+        return Err((
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(json!({"error": "Passphrase is required"})),
+        ));
+    }
+
+    let files = state.tracked_files.read().await;
+    let filter = req.filter.to_lowercase();
+    let filtered: Vec<&FileState> = if filter.is_empty() {
+        files.iter().collect()
+    } else {
+        files
+            .iter()
+            .filter(|f| f.path.to_lowercase().contains(&filter))
+            .collect()
+    };
+
+    if filtered.is_empty() {
+        return Ok(Json(json!({
+            "status": "ok",
+            "exported": 0,
+            "message": "No files matched the filter",
+        })));
+    }
+
+    let config_dir = state.profiles_dir.parent().unwrap_or(&state.profiles_dir);
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let output_path = config_dir.join(format!("export-{timestamp}.echoax.age"));
+
+    let exported_paths: Vec<String> = filtered.iter().map(|f| f.path.clone()).collect();
+    let count = exported_paths.len();
+
+    match echoax_core::portability::export::export_archive(
+        &state.profiles_dir,
+        &output_path,
+        &req.passphrase,
+    ) {
+        Ok(_manifest) => Ok(Json(json!({
+            "status": "ok",
+            "exported": count,
+            "output_path": output_path.to_string_lossy(),
+            "files": exported_paths,
+            "message": format!("{count} file(s) exported to {}", output_path.display()),
+        }))),
+        Err(e) => Err((
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Export failed: {e}")})),
+        )),
     }
 }
 
@@ -740,6 +814,7 @@ pub fn create_router_with_state(state: Arc<AppState>) -> Router {
         .route("/api/conflicts", get(api_conflicts_list))
         .route("/api/conflicts/resolve", post(api_conflicts_resolve))
         .route("/api/cloud/test", post(api_cloud_test))
+        .route("/api/export", post(api_export))
         .route("/api/server/info", get(api_server_info))
         .route("/api/update/check", get(api_update_check))
         .route("/api/update/install", post(api_update_install))
@@ -1273,12 +1348,38 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_cloud_test_no_bucket() {
+        let state = test_state();
+        {
+            let mut cfg = state.config.write().await;
+            cfg.cloud.enabled = true;
+            cfg.cloud.endpoint = "https://s3.example.com".to_string();
+            cfg.cloud.bucket.clear();
+        }
+        let app = create_router_with_state(state);
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/cloud/test")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["success"], false);
+        assert_eq!(json["message"], "No bucket configured");
+    }
+
+    #[tokio::test]
     async fn test_cloud_test_backend_not_yet_integrated() {
         let state = test_state();
         {
             let mut cfg = state.config.write().await;
             cfg.cloud.enabled = true;
             cfg.cloud.endpoint = "https://s3.example.com".to_string();
+            cfg.cloud.bucket = "test-bucket".to_string();
         }
         let app = create_router_with_state(state);
         let req = Request::builder()

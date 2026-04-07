@@ -197,7 +197,10 @@
           <select id="cfg-log-level"><option value="trace">trace</option><option value="debug">debug</option><option value="info">info</option><option value="warn">warn</option><option value="error">error</option></select>
         </div>
       </div>
-      <label class="checkbox-label"><input type="checkbox" id="cfg-auto-start" /> <span data-i18n="lbl_auto_start">AUTO START</span></label>
+      <div class="form-row">
+        <div class="form-group"><label data-i18n="lbl_port">PORT</label><input id="cfg-port" type="number" min="1" max="65535" /><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="cfg-port"></span></span></div>
+        <div class="form-group"><label>&nbsp;</label><label class="checkbox-label"><input type="checkbox" id="cfg-auto-start" /> <span data-i18n="lbl_auto_start">AUTO START</span></label></div>
+      </div>
     </div>
     <div id="tab-session" class="tab-content">
       <div class="form-row">
@@ -220,7 +223,15 @@
         <div>
           <div class="panel-title" data-i18n="cloud_configuration">CLOUD CONFIGURATION</div>
           <label class="checkbox-label"><input type="checkbox" id="cfg-cloud-enabled" onchange="updateCloudDot()" /> <span data-i18n="lbl_cloud_enabled">CLOUD SYNC ENABLED</span></label>
-          <div class="form-group" style="margin-top:1rem"><label data-i18n="lbl_endpoint">ENDPOINT URL</label><input id="cfg-endpoint" type="text" data-i18n-ph="ph_endpoint" placeholder="https://s3.example.com/bucket" /></div>
+          <div class="form-group" style="margin-top:1rem"><label data-i18n="lbl_endpoint">ENDPOINT URL</label><input id="cfg-endpoint" type="text" data-i18n-ph="ph_endpoint" placeholder="https://s3.example.com" /></div>
+          <div class="form-row">
+            <div class="form-group"><label data-i18n="lbl_region">REGION</label><input id="cfg-region" type="text" data-i18n-ph="ph_region" placeholder="us-east-1" /></div>
+            <div class="form-group"><label data-i18n="lbl_bucket">BUCKET</label><input id="cfg-bucket" type="text" data-i18n-ph="ph_bucket" placeholder="my-bucket" /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label data-i18n="lbl_access_key">ACCESS KEY ID</label><input id="cfg-access-key" type="text" data-i18n-ph="ph_access_key" placeholder="AKIAIOSFODNN7EXAMPLE" /></div>
+            <div class="form-group"><label data-i18n="lbl_secret_key">SECRET ACCESS KEY</label><input id="cfg-secret-key" type="password" data-i18n-ph="ph_secret_key" placeholder="********" /></div>
+          </div>
           <div class="form-group"><label data-i18n="lbl_sync_interval">SYNC INTERVAL (SECONDS)</label><input id="cfg-sync-interval" type="number" /></div>
           <div style="margin-top:1rem">
             <button class="btn btn-outline" id="btn-cloud-test" onclick="testCloudConnection()" data-i18n="btn_test_connection">TEST CONNECTION</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-test-connection"></span></span>
@@ -293,6 +304,21 @@
   </div>
 
   <div class="section">
+    <h2><span data-i18n="sec_export">// EXPORT</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="export"></span></span></h2>
+    <div class="add-file-row">
+      <input type="text" id="export-filter" data-i18n-ph="ph_export_filter" placeholder="Filter files by path..." style="flex:1" />
+      <button class="btn btn-outline btn-sm" id="btn-export-preview" onclick="previewExport()" data-i18n="btn_export_preview">PREVIEW</button>
+    </div>
+    <div class="file-list" id="export-preview-list" style="max-height:180px;overflow-y:auto">
+      <div class="empty-state" data-i18n="empty_export_preview">Enter a filter and click PREVIEW to see matching files.</div>
+    </div>
+    <div class="add-file-row" style="margin-top:.75rem">
+      <input type="password" id="export-passphrase" data-i18n-ph="ph_export_passphrase" placeholder="Encryption passphrase..." style="flex:1" />
+      <button class="btn btn-primary btn-sm" id="btn-export" onclick="doExport()" data-i18n="btn_export">EXPORT</button><span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="btn-export"></span></span>
+    </div>
+  </div>
+
+  <div class="section">
     <h2><span data-i18n="sec_activity_log">// ACTIVITY LOG</span> <span class="help-tip" tabindex="0"><span class="help-trigger" aria-label="Help">?</span><span class="help-content" role="tooltip" data-help="activity-log"></span></span></h2>
     <div class="log" id="log">
       <div><span class="ts">[--:--:--]</span> <span class="ok" data-i18n="msg_server_started">Server started</span></div>
@@ -308,6 +334,7 @@ var TRANSLATIONS = {
   sec_sync_groups:{en:'// SYNC GROUPS',zh:'// 同步分组'},
   sec_conflicts:{en:'// CONFLICTS',zh:'// 冲突管理'},
   sec_session:{en:'// SESSION',zh:'// 会话安全'},
+  sec_export:{en:'// EXPORT',zh:'// 导出'},
   sec_activity_log:{en:'// ACTIVITY LOG',zh:'// 活动日志'},
   tab_general:{en:'GENERAL',zh:'通用'},
   tab_session:{en:'SESSION',zh:'会话'},
@@ -338,8 +365,13 @@ var TRANSLATIONS = {
   lbl_auto_lock:{en:'AUTO LOCK',zh:'自动锁定'},
   lbl_hotkey:{en:'HOTKEY',zh:'快捷键'},
   lbl_on_login:{en:'ON LOGIN',zh:'登录时启动'},
+  lbl_port:{en:'PORT',zh:'端口'},
   lbl_cloud_enabled:{en:'CLOUD SYNC ENABLED',zh:'启用云同步'},
   lbl_endpoint:{en:'ENDPOINT URL',zh:'端点地址'},
+  lbl_region:{en:'REGION',zh:'区域'},
+  lbl_bucket:{en:'BUCKET',zh:'存储桶'},
+  lbl_access_key:{en:'ACCESS KEY ID',zh:'访问密钥 ID'},
+  lbl_secret_key:{en:'SECRET ACCESS KEY',zh:'秘密访问密钥'},
   lbl_sync_interval:{en:'SYNC INTERVAL (SECONDS)',zh:'同步间隔（秒）'},
   lbl_check_interval:{en:'CHECK INTERVAL (HOURS)',zh:'检查间隔（小时）'},
   lbl_channel:{en:'CHANNEL',zh:'更新通道'},
@@ -381,8 +413,14 @@ var TRANSLATIONS = {
   ph_group_name:{en:'Group Name',zh:'分组名称'},
   ph_path_prefix:{en:'path/prefix/',zh:'路径前缀/'},
   ph_password:{en:'password...',zh:'密码...'},
-  ph_endpoint:{en:'https://s3.example.com/bucket',zh:'https://s3.example.com/bucket'},
+  ph_endpoint:{en:'https://s3.example.com',zh:'https://s3.example.com'},
+  ph_region:{en:'us-east-1',zh:'us-east-1'},
+  ph_bucket:{en:'my-bucket',zh:'my-bucket'},
+  ph_access_key:{en:'AKIAIOSFODNN7EXAMPLE',zh:'AKIAIOSFODNN7EXAMPLE'},
+  ph_secret_key:{en:'********',zh:'********'},
   ph_channel:{en:'stable',zh:'stable'},
+  ph_export_filter:{en:'Filter files by path...',zh:'按路径过滤文件...'},
+  ph_export_passphrase:{en:'Encryption passphrase...',zh:'加密密码...'},
   msg_config_saved:{en:'Configuration saved',zh:'配置已保存'},
   msg_config_loaded:{en:'Config loaded',zh:'配置已加载'},
   msg_config_load_failed:{en:'Config load failed',zh:'配置加载失败'},
@@ -424,6 +462,13 @@ var TRANSLATIONS = {
   msg_session_unlocked:{en:'Session unlocked',zh:'会话已解锁'},
   msg_session_locked:{en:'Session locked',zh:'会话已锁定'},
   msg_session_failed:{en:'Session action failed',zh:'会话操作失败'},
+  btn_export_preview:{en:'PREVIEW',zh:'预览'},
+  btn_export:{en:'EXPORT',zh:'导出'},
+  empty_export_preview:{en:'Enter a filter and click PREVIEW to see matching files.',zh:'输入过滤条件并点击预览查看匹配文件。'},
+  msg_export_success:{en:'Export successful',zh:'导出成功'},
+  msg_export_failed:{en:'Export failed',zh:'导出失败'},
+  msg_export_no_match:{en:'No files matched the filter',zh:'没有文件匹配过滤条件'},
+  msg_passphrase_required:{en:'Passphrase required',zh:'需要加密密码'},
   msg_server_started:{en:'Server started',zh:'服务器已启动'},
   msg_now_tracking:{en:'Now tracking',zh:'开始跟踪'},
   msg_lang_changed:{en:'Language changed',zh:'语言已切换'},
@@ -535,6 +580,18 @@ var HELP_TEXTS = {
   'btn-save-config': {
     en: 'Save all configuration changes to disk. Settings are persisted in your local config.toml file.',
     zh: '将所有配置更改保存到磁盘。设置会持久化到本地 config.toml 文件中。'
+  },
+  'cfg-port': {
+    en: 'The port number for the web UI server. Takes effect on next restart. Default: 9876.',
+    zh: 'Web UI 服务器的端口号。下次重启后生效。默认值：9876。'
+  },
+  'export': {
+    en: 'Export tracked files as an encrypted archive. Use the filter to select specific files by path keyword.',
+    zh: '将跟踪的文件导出为加密归档。使用过滤器按路径关键字选择特定文件。'
+  },
+  'btn-export': {
+    en: 'Export the filtered files as an age-encrypted archive. Requires a passphrase for encryption.',
+    zh: '将过滤后的文件导出为 age 加密归档。需要加密密码。'
   }
 };
 
@@ -781,12 +838,17 @@ function loadConfig() {
   fetch('/api/config').then(function(r){ return r.json(); }).then(function(c) {
     document.getElementById('cfg-language').value = c.general.language || 'en';
     document.getElementById('cfg-log-level').value = c.general.log_level || 'info';
+    document.getElementById('cfg-port').value = c.general.port || 9876;
     document.getElementById('cfg-auto-start').checked = !!c.general.auto_start;
     document.getElementById('cfg-timeout').value = c.session.timeout_secs || 300;
     document.getElementById('cfg-auto-lock').checked = !!c.session.auto_lock;
     document.getElementById('cfg-hotkey').value = c.trigger.hotkey || '';
     document.getElementById('cfg-on-login').checked = !!c.trigger.on_login;
     document.getElementById('cfg-endpoint').value = c.cloud.endpoint || '';
+    document.getElementById('cfg-region').value = c.cloud.region || '';
+    document.getElementById('cfg-bucket').value = c.cloud.bucket || '';
+    document.getElementById('cfg-access-key').value = c.cloud.access_key_id || '';
+    document.getElementById('cfg-secret-key').value = c.cloud.secret_access_key || '';
     document.getElementById('cfg-sync-interval').value = c.cloud.sync_interval_secs || 60;
     document.getElementById('cfg-cloud-enabled').checked = !!c.cloud.enabled;
     document.getElementById('cfg-check-interval').value = c.update.check_interval_hours || 24;
@@ -803,7 +865,8 @@ function saveConfig() {
       language: document.getElementById('cfg-language').value,
       theme: currentTheme,
       auto_start: document.getElementById('cfg-auto-start').checked,
-      log_level: document.getElementById('cfg-log-level').value
+      log_level: document.getElementById('cfg-log-level').value,
+      port: parseInt(document.getElementById('cfg-port').value) || 9876
     },
     session: {
       timeout_secs: parseInt(document.getElementById('cfg-timeout').value) || 300,
@@ -816,6 +879,10 @@ function saveConfig() {
     cloud: {
       enabled: document.getElementById('cfg-cloud-enabled').checked,
       endpoint: document.getElementById('cfg-endpoint').value,
+      region: document.getElementById('cfg-region').value,
+      bucket: document.getElementById('cfg-bucket').value,
+      access_key_id: document.getElementById('cfg-access-key').value,
+      secret_access_key: document.getElementById('cfg-secret-key').value,
       sync_interval_secs: parseInt(document.getElementById('cfg-sync-interval').value) || 60
     },
     update: {
@@ -1023,6 +1090,46 @@ function testCloudConnection() {
       toast(t('msg_cloud_test_failed') + ': ' + e, 'error');
       log(t('msg_cloud_test_error') + ': ' + e, 'warn');
     });
+}
+
+function previewExport() {
+  var filter = document.getElementById('export-filter').value.trim().toLowerCase();
+  fetch('/api/files').then(function(r){return r.json()}).then(function(d){
+    var files = d.files || [];
+    var filtered = filter ? files.filter(function(f){ return f.path.toLowerCase().indexOf(filter) !== -1; }) : files;
+    var el = document.getElementById('export-preview-list');
+    if (filtered.length === 0) {
+      el.innerHTML = '<div class="empty-state">' + t('msg_export_no_match') + '</div>';
+      return;
+    }
+    var html = '';
+    filtered.forEach(function(f) {
+      html += '<div class="file-row"><span class="file-path">' + esc(f.path) + '</span>';
+      html += '<span class="badge ' + badgeClass(f.status) + '">' + t('status_' + f.status) + '</span>';
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(e){ toast(t('msg_export_failed') + ': ' + e, 'error'); });
+}
+
+function doExport() {
+  var filter = document.getElementById('export-filter').value.trim();
+  var passphrase = document.getElementById('export-passphrase').value;
+  if (!passphrase) { toast(t('msg_passphrase_required'), 'error'); return; }
+  setLoading('btn-export', true);
+  fetch('/api/export', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({filter: filter, passphrase: passphrase})
+  }).then(function(r){return r.json()}).then(function(d){
+    setLoading('btn-export', false);
+    if (d.error) { toast(d.error, 'error'); log(t('msg_export_failed') + ': ' + d.error, 'warn'); }
+    else { toast(d.message, 'success'); log(t('msg_export_success') + ': ' + d.message, 'ok'); }
+  }).catch(function(e){
+    setLoading('btn-export', false);
+    toast(t('msg_export_failed') + ': ' + e, 'error');
+    log(t('msg_export_failed') + ': ' + e, 'warn');
+  });
 }
 
 function updateCloudDot() {
