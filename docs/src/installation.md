@@ -6,14 +6,14 @@ Download the latest release for your platform:
 
 | Platform | Architecture | Download |
 |----------|-------------|----------|
-| Linux | x86_64 | `echoax-v0.1.5-x86_64-unknown-linux-gnu.tar.gz` |
-| Linux | aarch64 | `echoax-v0.1.5-aarch64-unknown-linux-gnu.tar.gz` |
-| macOS | Intel | `echoax-v0.1.5-x86_64-apple-darwin.tar.gz` |
-| macOS | Apple Silicon | `echoax-v0.1.5-aarch64-apple-darwin.tar.gz` |
+| Linux | x86_64 | `echoax-v0.1.6-x86_64-unknown-linux-gnu.tar.gz` |
+| Linux | aarch64 | `echoax-v0.1.6-aarch64-unknown-linux-gnu.tar.gz` |
+| macOS | Intel | `echoax-v0.1.6-x86_64-apple-darwin.tar.gz` |
+| macOS | Apple Silicon | `echoax-v0.1.6-aarch64-apple-darwin.tar.gz` |
 
 ```bash
 # Example: Linux x86_64
-curl -fsSL https://github.com/YoRHa-Agents/EchoAccess/releases/latest/download/echoax-v0.1.5-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -fsSL https://github.com/YoRHa-Agents/EchoAccess/releases/latest/download/echoax-v0.1.6-x86_64-unknown-linux-gnu.tar.gz | tar xz
 sudo mv echoax-*/echo_access /usr/local/bin/echo_access
 ```
 

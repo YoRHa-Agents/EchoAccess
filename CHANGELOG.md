@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.1.6 — Release Artifact Audit & Build Refresh (2026-04-08)
+
+Release-focused follow-up that validates the shipped artifact set, refreshes the release metadata to v0.1.6, and makes local full-matrix packaging closer to the official CI release path.
+
+### Release Artifact Health
+
+- **Manifest verification**: Confirmed the published `checksums.sha256` entries match all 5 official v0.1.5 release archives
+- **Official asset set**: Verified the public release contains the expected Linux, macOS, and Windows MSVC artifacts with matching per-asset checksums
+- **Release confidence**: Established a clean baseline before cutting the next version
+
+### Local Release Build
+
+- **Windows MSVC from non-Windows hosts**: `scripts/build-release.sh` now uses `cargo-xwin` for `x86_64-pc-windows-msvc` when run from Linux or macOS
+- **Cross-platform parity**: Non-Windows targets continue to use `cargo zigbuild`, while Windows hosts keep using native `cargo build`
+- **Combined checksums**: Local release builds now emit `dist/checksums.sha256` alongside the per-asset `.sha256` files
+
+### Release Metadata
+
+- **Workspace bump**: Updated the workspace version to `0.1.6`
+- **Docs refresh**: Updated README, installation docs, landing page content, and dashboard version labels to reference `v0.1.6`
+
+### Verification
+
+- **Release build**: `./scripts/build-release.sh 0.1.6` completed successfully for all 5 official targets
+- **Test suite**: `cargo test --workspace` passed with **169 tests**
+
 ## v0.1.5 — Port Management, Cloud Config & Export Filter (2026-04-07)
 
 Feedback-driven release addressing v0.1.4 review: web UI port management, complete cloud configuration, and export with search/filter.
