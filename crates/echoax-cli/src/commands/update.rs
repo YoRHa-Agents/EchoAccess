@@ -120,7 +120,13 @@ pub async fn download_and_install(info: &UpdateInfo) -> echoax_core::Result<Stri
     pb.finish_with_message("Download complete");
 
     if !info.checksum_url.is_empty() {
-        verify_checksum(&client, &info.checksum_url, &archive_bytes).await?;
+        verify_checksum(
+            &client,
+            &info.checksum_url,
+            &info.download_url,
+            &archive_bytes,
+        )
+        .await?;
     }
 
     let bin_name = binary_name();
@@ -143,6 +149,7 @@ pub async fn download_and_install(info: &UpdateInfo) -> echoax_core::Result<Stri
 async fn verify_checksum(
     client: &reqwest::Client,
     checksum_url: &str,
+    download_url: &str,
     archive_bytes: &[u8],
 ) -> echoax_core::Result<()> {
     let resp = client
@@ -155,16 +162,20 @@ async fn verify_checksum(
         .await
         .map_err(|e| EchoAccessError::Network(format!("Failed to download checksum: {e}")))?;
 
+    if !resp.status().is_success() {
+        return Err(EchoAccessError::Network(format!(
+            "Checksum download failed with status {}",
+            resp.status()
+        )));
+    }
+
     let checksum_text = resp
         .text()
         .await
         .map_err(|e| EchoAccessError::Network(format!("Failed to read checksum: {e}")))?;
 
-    let expected_hash = checksum_text
-        .split_whitespace()
-        .next()
-        .unwrap_or("")
-        .to_lowercase();
+    let asset_name = asset_name_from_download_url(download_url)?;
+    let expected_hash = extract_expected_hash(&checksum_text, &asset_name)?;
 
     let mut hasher = Sha256::new();
     hasher.update(archive_bytes);
@@ -178,6 +189,49 @@ async fn verify_checksum(
 
     println!("Checksum verified");
     Ok(())
+}
+
+fn asset_name_from_download_url(download_url: &str) -> echoax_core::Result<String> {
+    download_url
+        .rsplit('/')
+        .next()
+        .filter(|segment| !segment.is_empty())
+        .map(|segment| segment.to_string())
+        .ok_or_else(|| {
+            EchoAccessError::Network(format!(
+                "Failed to determine asset name from download URL: {download_url}"
+            ))
+        })
+}
+
+fn extract_expected_hash(checksum_text: &str, asset_name: &str) -> echoax_core::Result<String> {
+    let lines: Vec<&str> = checksum_text
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect();
+
+    for line in &lines {
+        let mut parts = line.split_whitespace();
+        let hash = parts.next().unwrap_or("");
+        let file_name = parts.next().unwrap_or("").trim_start_matches('*');
+        if !hash.is_empty() && file_name == asset_name {
+            return Ok(hash.to_lowercase());
+        }
+    }
+
+    if lines.len() == 1 {
+        let mut parts = lines[0].split_whitespace();
+        let hash = parts.next().unwrap_or("").to_lowercase();
+        let file_name = parts.next();
+        if !hash.is_empty() && file_name.is_none() {
+            return Ok(hash);
+        }
+    }
+
+    Err(EchoAccessError::Network(format!(
+        "No checksum entry found for asset '{asset_name}'"
+    )))
 }
 
 fn extract_from_tar_gz(archive_bytes: &[u8], target_name: &str) -> echoax_core::Result<Vec<u8>> {
@@ -373,5 +427,46 @@ mod tests {
         let archive = make_test_zip(&[("README.md", b"readme")]);
         let err = extract_from_zip(&archive, "echo_access").unwrap_err();
         assert!(matches!(err, EchoAccessError::Network(_)));
+    }
+
+    #[test]
+    fn extract_expected_hash_from_combined_manifest() {
+        let checksum_text = "\
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  echoax-v0.1.5-x86_64-unknown-linux-gnu.tar.gz\n\
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb  echoax-v0.1.5-x86_64-pc-windows-msvc.zip\n";
+        let hash = extract_expected_hash(checksum_text, "echoax-v0.1.5-x86_64-pc-windows-msvc.zip")
+            .unwrap();
+        assert_eq!(
+            hash,
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        );
+    }
+
+    #[test]
+    fn extract_expected_hash_from_single_asset_checksum() {
+        let checksum_text =
+            "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc  echoax.zip\n";
+        let hash = extract_expected_hash(checksum_text, "echoax.zip").unwrap();
+        assert_eq!(
+            hash,
+            "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        );
+    }
+
+    #[test]
+    fn extract_expected_hash_errors_when_asset_missing() {
+        let checksum_text =
+            "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd  other.zip\n";
+        let err = extract_expected_hash(checksum_text, "echoax.zip").unwrap_err();
+        assert!(format!("{err}").contains("No checksum entry found"));
+    }
+
+    #[test]
+    fn asset_name_from_download_url_uses_final_path_segment() {
+        let name = asset_name_from_download_url(
+            "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.1.5/echoax.zip",
+        )
+        .unwrap();
+        assert_eq!(name, "echoax.zip");
     }
 }
