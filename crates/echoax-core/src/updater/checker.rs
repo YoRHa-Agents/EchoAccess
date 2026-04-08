@@ -3,6 +3,8 @@ use serde_json::Value;
 
 use crate::error::{EchoAccessError, Result};
 
+const COMBINED_CHECKSUMS_FILE: &str = "checksums.sha256";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UpdateInfo {
     pub current_version: String,
@@ -44,7 +46,10 @@ pub fn get_platform_target() -> &'static str {
 /// `current_version` is the running binary's version (e.g. "0.1.3").
 ///
 /// Returns [`UpdateInfo`] with `download_url` set to the matching platform asset,
-/// and `checksum_url` set to the corresponding `.sha256` file.
+/// and `checksum_url` set to the preferred checksum asset.
+/// The release workflow publishes `checksums.sha256`; older/manual releases may
+/// also upload per-asset `.sha256` files, so we prefer the combined manifest and
+/// fall back to the per-asset file when needed.
 pub fn parse_github_release(json_str: &str, current_version: &str) -> Result<UpdateInfo> {
     let release: Value = serde_json::from_str(json_str)
         .map_err(|e| EchoAccessError::Network(format!("Failed to parse release JSON: {e}")))?;
@@ -63,20 +68,29 @@ pub fn parse_github_release(json_str: &str, current_version: &str) -> Result<Upd
     let platform = get_platform_target();
     let mut download_url = String::new();
     let mut checksum_url = String::new();
+    let mut per_asset_checksum_url = String::new();
 
     if let Some(assets) = release["assets"].as_array() {
         for asset in assets {
             if let Some(name) = asset["name"].as_str() {
                 if let Some(url) = asset["browser_download_url"].as_str() {
+                    if name == COMBINED_CHECKSUMS_FILE {
+                        checksum_url = url.to_string();
+                        continue;
+                    }
                     if name.contains(platform) && !name.ends_with(".sha256") {
                         download_url = url.to_string();
                     }
                     if name.contains(platform) && name.ends_with(".sha256") {
-                        checksum_url = url.to_string();
+                        per_asset_checksum_url = url.to_string();
                     }
                 }
             }
         }
+    }
+
+    if checksum_url.is_empty() {
+        checksum_url = per_asset_checksum_url;
     }
 
     Ok(UpdateInfo {
@@ -107,6 +121,18 @@ mod tests {
     use super::*;
 
     const SAMPLE_RELEASE_JSON: &str = r###"{
+  "tag_name": "v0.2.0",
+  "body": "## Changes\n- New feature X",
+  "assets": [
+    {"name": "checksums.sha256", "browser_download_url": "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/checksums.sha256"},
+    {"name": "echoax-v0.2.0-x86_64-unknown-linux-gnu.tar.gz", "browser_download_url": "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/echoax-v0.2.0-x86_64-unknown-linux-gnu.tar.gz"},
+    {"name": "echoax-v0.2.0-x86_64-unknown-linux-gnu.tar.gz.sha256", "browser_download_url": "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/echoax-v0.2.0-x86_64-unknown-linux-gnu.tar.gz.sha256"},
+    {"name": "echoax-v0.2.0-x86_64-apple-darwin.tar.gz", "browser_download_url": "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/echoax-v0.2.0-x86_64-apple-darwin.tar.gz"},
+    {"name": "echoax-v0.2.0-x86_64-apple-darwin.tar.gz.sha256", "browser_download_url": "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/echoax-v0.2.0-x86_64-apple-darwin.tar.gz.sha256"}
+  ]
+}"###;
+
+    const SAMPLE_RELEASE_JSON_PER_ASSET_ONLY: &str = r###"{
   "tag_name": "v0.2.0",
   "body": "## Changes\n- New feature X",
   "assets": [
@@ -195,12 +221,35 @@ mod tests {
                 );
                 assert_eq!(
                     info.checksum_url,
-                    "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/echoax-v0.2.0-x86_64-unknown-linux-gnu.tar.gz.sha256"
+                    "https://github.com/YoRHa-Agents/EchoAccess/releases/download/v0.2.0/checksums.sha256"
                 );
             }
             "x86_64-apple-darwin" => {
                 assert!(info.download_url.contains("x86_64-apple-darwin"));
-                assert!(info.checksum_url.ends_with(".sha256"));
+                assert!(info.checksum_url.ends_with(COMBINED_CHECKSUMS_FILE));
+            }
+            _ => {
+                assert!(info.download_url.is_empty());
+                assert!(info.checksum_url.ends_with(COMBINED_CHECKSUMS_FILE));
+            }
+        }
+    }
+
+    #[test]
+    fn parse_github_release_falls_back_to_per_asset_checksum() {
+        let info = parse_github_release(SAMPLE_RELEASE_JSON_PER_ASSET_ONLY, "0.1.0").unwrap();
+        match get_platform_target() {
+            "x86_64-unknown-linux-gnu" => {
+                assert!(info.download_url.contains("x86_64-unknown-linux-gnu"));
+                assert!(info
+                    .checksum_url
+                    .ends_with("x86_64-unknown-linux-gnu.tar.gz.sha256"));
+            }
+            "x86_64-apple-darwin" => {
+                assert!(info.download_url.contains("x86_64-apple-darwin"));
+                assert!(info
+                    .checksum_url
+                    .ends_with("x86_64-apple-darwin.tar.gz.sha256"));
             }
             _ => {
                 assert!(info.download_url.is_empty());
