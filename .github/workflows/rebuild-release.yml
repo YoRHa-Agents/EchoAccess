@@ -1,0 +1,277 @@
+name: Rebuild Release Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing git tag to rebuild, for example v0.1.5
+        required: true
+        type: string
+      publish_assets:
+        description: Upload rebuilt artifacts back to the GitHub release
+        required: true
+        default: false
+        type: boolean
+      prune_extra_assets:
+        description: Delete stale managed assets before upload
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  prepare:
+    name: Resolve rebuild target
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
+      checkout_ref: ${{ steps.resolve.outputs.checkout_ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: resolve
+        shell: bash
+        run: |
+          TAG="${{ inputs.tag }}"
+          if [[ -z "${TAG}" ]]; then
+            echo "The tag input is required." >&2
+            exit 1
+          fi
+          if [[ ! "${TAG}" =~ ^v[0-9] ]]; then
+            echo "Expected a tag like v0.1.5, got '${TAG}'." >&2
+            exit 1
+          fi
+          if ! git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} does not exist in this repository." >&2
+            exit 1
+          fi
+
+          echo "release_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=refs/tags/${TAG}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-rebuild-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-rebuild-
+
+      - name: Install zig
+        if: matrix.archive != 'zip'
+        uses: mlugg/setup-zig@v2
+
+      - name: Install cargo-zigbuild
+        if: matrix.archive != 'zip'
+        run: cargo install cargo-zigbuild
+
+      - name: Build release binary (zigbuild)
+        if: matrix.archive != 'zip'
+        run: cargo zigbuild --release -p echoax-cli --target ${{ matrix.target }}
+
+      - name: Build release binary (Windows native)
+        if: matrix.archive == 'zip'
+        run: cargo build --release -p echoax-cli --target ${{ matrix.target }}
+
+      - name: Package release (tar.gz)
+        if: matrix.archive != 'zip'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        run: |
+          ARCHIVE_NAME="echoax-${RELEASE_TAG}-${{ matrix.target }}"
+          mkdir -p "dist/${ARCHIVE_NAME}"
+
+          cp "target/${{ matrix.target }}/release/echo_access" "dist/${ARCHIVE_NAME}/"
+          cp README.md LICENSE "dist/${ARCHIVE_NAME}/"
+
+          cd dist
+          tar czf "${ARCHIVE_NAME}.tar.gz" "${ARCHIVE_NAME}"
+          sha256sum "${ARCHIVE_NAME}.tar.gz" > "${ARCHIVE_NAME}.tar.gz.sha256"
+
+      - name: Package release (zip)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        run: |
+          $archiveName = "echoax-$env:RELEASE_TAG-${{ matrix.target }}"
+          $distDir = Join-Path "dist" $archiveName
+          New-Item -ItemType Directory -Force -Path $distDir | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/echo_access.exe" $distDir
+          Copy-Item "README.md", "LICENSE" $distDir
+          $zipPath = Join-Path "dist" "${archiveName}.zip"
+          Compress-Archive -Path (Join-Path $distDir "*") -DestinationPath $zipPath -Force
+          $hash = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLower()
+          $sumLine = "${hash}  ${archiveName}.zip"
+          $sumPath = "${zipPath}.sha256"
+          Set-Content -Path $sumPath -Value $sumLine -Encoding utf8NoBOM
+
+      - name: Upload artifacts (tar.gz)
+        if: matrix.archive != 'zip'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebuild-${{ matrix.target }}
+          path: dist/*.tar.gz*
+
+      - name: Upload artifacts (zip)
+        if: matrix.archive == 'zip'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebuild-${{ matrix.target }}
+          path: dist/*.zip*
+
+  summarize:
+    name: Summarize rebuilt artifacts
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download rebuilt artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: rebuild-*
+          merge-multiple: true
+
+      - name: Show artifact inventory
+        shell: bash
+        run: |
+          cd artifacts
+          ls -lh
+
+  publish:
+    name: Publish rebuilt assets
+    if: ${{ inputs.publish_assets }}
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download rebuilt artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: rebuild-*
+          merge-multiple: true
+
+      - name: Create combined checksums file
+        shell: bash
+        run: |
+          cd artifacts
+          shopt -s nullglob
+          sum_files=( *.sha256 )
+          if [ ${#sum_files[@]} -eq 0 ]; then
+            echo "No per-artifact .sha256 files found." >&2
+            exit 1
+          fi
+          cat "${sum_files[@]}" > checksums.sha256
+
+      - name: Ensure target release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        shell: bash
+        run: |
+          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release create "${RELEASE_TAG}" \
+              --verify-tag \
+              --title "${RELEASE_TAG}" \
+              --notes "Rebuilt release assets for ${RELEASE_TAG}."
+          fi
+
+      - name: Remove stale managed assets
+        if: ${{ inputs.prune_extra_assets }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import subprocess
+
+          release_tag = os.environ["RELEASE_TAG"]
+          expected = {
+              path.name
+              for path in pathlib.Path("artifacts").iterdir()
+              if path.is_file()
+          }
+          expected.add("checksums.sha256")
+          managed_prefix = f"echoax-{release_tag}-"
+
+          release = subprocess.check_output(
+              ["gh", "release", "view", release_tag, "--json", "assets"],
+              text=True,
+          )
+          assets = json.loads(release)["assets"]
+
+          for asset in assets:
+              name = asset["name"]
+              managed = name == "checksums.sha256" or name.startswith(managed_prefix)
+              if managed and name not in expected:
+                  subprocess.check_call(
+                      ["gh", "release", "delete-asset", release_tag, name, "--yes"]
+                  )
+          PY
+
+      - name: Upload rebuilt assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        shell: bash
+        run: |
+          gh release upload "${RELEASE_TAG}" \
+            artifacts/*.tar.gz \
+            artifacts/*.tar.gz.sha256 \
+            artifacts/*.zip \
+            artifacts/*.zip.sha256 \
+            artifacts/checksums.sha256 \
+            --clobber
