@@ -27,6 +27,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   prepare:
@@ -36,7 +37,7 @@ jobs:
       release_tag: ${{ steps.resolve.outputs.release_tag }}
       checkout_ref: ${{ steps.resolve.outputs.checkout_ref }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -85,7 +86,7 @@ jobs:
             archive: zip
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
@@ -95,7 +96,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Cache cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -157,14 +158,14 @@ jobs:
 
       - name: Upload artifacts (tar.gz)
         if: matrix.archive != 'zip'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rebuild-${{ matrix.target }}
           path: dist/*.tar.gz*
 
       - name: Upload artifacts (zip)
         if: matrix.archive == 'zip'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rebuild-${{ matrix.target }}
           path: dist/*.zip*
@@ -175,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download rebuilt artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
           pattern: rebuild-*
@@ -194,7 +195,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download rebuilt artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
           pattern: rebuild-*
