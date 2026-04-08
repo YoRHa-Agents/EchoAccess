@@ -10,9 +10,21 @@ TARGETS=(
     "x86_64-pc-windows-msvc"
 )
 
+HOST_OS="$(uname -s)"
+
 echo "Building EchoAccess v${VERSION} for ${#TARGETS[@]} targets"
 
 mkdir -p dist
+
+shopt -s nullglob
+stale_outputs=(
+    dist/echoax-v${VERSION}-*
+    dist/checksums.sha256
+)
+if [ ${#stale_outputs[@]} -gt 0 ]; then
+    rm -rf "${stale_outputs[@]}"
+fi
+shopt -u nullglob
 
 succeeded=()
 failed=()
@@ -21,10 +33,32 @@ for target in "${TARGETS[@]}"; do
     echo ""
     echo "=== Building for ${target} ==="
 
-    if ! cargo zigbuild --release -p echoax-cli --target "${target}"; then
-        echo "ERROR: cargo zigbuild failed for ${target}" >&2
-        failed+=("${target}")
-        continue
+    if [[ "${target}" == *windows-msvc* ]]; then
+        if [[ "${HOST_OS}" == "Linux" || "${HOST_OS}" == "Darwin" ]]; then
+            if ! command -v cargo-xwin >/dev/null 2>&1; then
+                echo "ERROR: cargo-xwin is required to build ${target} from ${HOST_OS}" >&2
+                echo "Install it with: cargo install cargo-xwin" >&2
+                failed+=("${target}")
+                continue
+            fi
+            if ! cargo xwin build --release -p echoax-cli --target "${target}"; then
+                echo "ERROR: cargo xwin build failed for ${target}" >&2
+                failed+=("${target}")
+                continue
+            fi
+        else
+            if ! cargo build --release -p echoax-cli --target "${target}"; then
+                echo "ERROR: cargo build failed for ${target}" >&2
+                failed+=("${target}")
+                continue
+            fi
+        fi
+    else
+        if ! cargo zigbuild --release -p echoax-cli --target "${target}"; then
+            echo "ERROR: cargo zigbuild failed for ${target}" >&2
+            failed+=("${target}")
+            continue
+        fi
     fi
 
     archive="echoax-v${VERSION}-${target}"
@@ -115,9 +149,16 @@ fi
 echo ""
 echo "=== Release artifacts ==="
 shopt -s nullglob
-archives=(dist/*.tar.gz dist/*.zip)
+archives=(dist/echoax-v${VERSION}-*.tar.gz dist/echoax-v${VERSION}-*.zip)
+sum_files=(dist/echoax-v${VERSION}-*.sha256)
+if [ ${#sum_files[@]} -gt 0 ]; then
+    cat "${sum_files[@]}" > dist/checksums.sha256
+fi
 if [ ${#archives[@]} -eq 0 ]; then
     echo "No archives in dist/"
 else
     ls -lh "${archives[@]}"
+fi
+if [ -f dist/checksums.sha256 ]; then
+    ls -lh dist/checksums.sha256
 fi
